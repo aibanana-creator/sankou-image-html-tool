@@ -1,0 +1,1434 @@
+<!doctype html>
+<html lang="ja">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta name="description" content="HTMLとCSSだけで動く画像モーション、画像エフェクト、画像間トランジション、画像境界、レイヤーモーションの実演ギャラリー">
+  <title>CSS Image Motion, Effects & Transition Lab</title>
+  <link rel="icon" href="favicon.svg" type="image/svg+xml">
+  <style>
+:root {
+  --ink: #151515;
+  --paper: #f2efe9;
+  --blue: #1428ff;
+  --lime: #d8ff3e;
+  --pink: #ff3dae;
+  --line: rgba(21, 21, 21, .18);
+  --e: cubic-bezier(.2, .7, .2, 1);
+}
+* { box-sizing: border-box; }
+html { scroll-behavior: smooth; }
+body { margin: 0; color: var(--ink); background: var(--paper); font-family: Inter, ui-sans-serif, system-ui, -apple-system, BlinkMacSystemFont, "Hiragino Sans", "Yu Gothic", sans-serif; }
+a { color: inherit; }
+.site-header { padding: 24px clamp(20px, 5vw, 72px) 36px; color: #fff; background: var(--ink); }
+.brand-row { display: flex; align-items: center; justify-content: space-between; gap: 24px; max-width: 1580px; margin: 0 auto; }
+.brand { display: flex; align-items: center; gap: 14px; font-weight: 800; letter-spacing: -.03em; }
+.brand img { width: 42px; height: 42px; border-radius: 9px; }
+.brand span { color: var(--lime); }
+.site-nav { display: flex; flex-wrap: wrap; gap: 10px; }
+.site-nav a { padding: 8px 12px; border: 1px solid rgba(255,255,255,.32); border-radius: 999px; text-decoration: none; font-size: 13px; font-weight: 700; }
+.hero { max-width: 1580px; margin: clamp(48px, 8vw, 112px) auto 0; }
+.eyebrow { display: inline-flex; gap: 8px; align-items: center; margin: 0 0 18px; color: var(--lime); font: 800 12px/1 ui-monospace, SFMono-Regular, Menlo, monospace; letter-spacing: .12em; }
+.eyebrow::before { width: 8px; height: 8px; border-radius: 50%; background: var(--pink); content: ""; }
+h1 { max-width: 1000px; margin: 0; font-size: clamp(46px, 8.5vw, 132px); line-height: .86; letter-spacing: -.08em; }
+h1 em { color: var(--pink); font-style: normal; }
+.hero p { max-width: 660px; margin: 30px 0 0; color: rgba(255,255,255,.76); font-size: clamp(15px, 1.5vw, 19px); line-height: 1.8; }
+main { max-width: 1580px; margin: 0 auto; padding: clamp(52px, 8vw, 120px) clamp(20px, 5vw, 72px); }
+.collection { scroll-margin-top: 24px; }
+.collection + .collection { margin-top: clamp(72px, 12vw, 180px); }
+.section-head { display: grid; grid-template-columns: auto 1fr; gap: 24px; align-items: end; padding-bottom: 18px; border-bottom: 3px solid var(--ink); }
+.section-id { color: var(--blue); font: 800 13px/1 ui-monospace, SFMono-Regular, Menlo, monospace; letter-spacing: .12em; }
+h2 { margin: 0; font-size: clamp(38px, 5.5vw, 76px); letter-spacing: -.06em; line-height: .95; }
+.section-head p { max-width: 550px; margin: 0; justify-self: end; font-size: 14px; line-height: 1.7; }
+.sample-grid { display: grid; grid-template-columns: repeat(4, minmax(0, 1fr)); gap: 16px; padding-top: 24px; }
+.sample-card { min-width: 0; border: 1px solid var(--line); background: #fff; box-shadow: 4px 4px 0 rgba(21,21,21,.06); }
+.preview { position: relative; overflow: hidden; isolation: isolate; width: 100%; aspect-ratio: 4 / 3; background: #171717; }
+.preview > img { position: relative; z-index: 0; display: block; width: 100%; height: 100%; object-fit: cover; transform-origin: center; transition: transform 720ms var(--e), opacity 720ms var(--e), clip-path 720ms var(--e); }
+.preview::before, .preview::after { position: absolute; z-index: 1; inset: 0; content: ""; pointer-events: none; }
+.card-copy { min-height: 112px; padding: 13px 14px 16px; }
+.index, .chip { display: inline-block; font: 800 11px/1 ui-monospace, SFMono-Regular, Menlo, monospace; letter-spacing: .08em; }
+.index { color: var(--blue); }
+.chip { margin-left: 8px; padding: 4px 5px; color: var(--ink); background: var(--lime); }
+.sample-card--effect .chip { background: var(--pink); }
+h3 { margin: 12px 0 5px; font-size: 17px; letter-spacing: -.03em; }
+.card-copy p { margin: 0; color: #5a5853; font-size: 12px; line-height: 1.5; }
+.site-footer { display: flex; justify-content: space-between; gap: 16px; padding: 22px clamp(20px, 5vw, 72px); color: #fff; background: var(--ink); font: 700 12px/1.6 ui-monospace, SFMono-Regular, Menlo, monospace; }
+
+/* Motion: hover / focus */
+.motion--zoom-in:hover > img { transform: scale(1.1); }
+.motion--zoom-out > img { transform: scale(1.12); }.motion--zoom-out:hover > img { transform: scale(1); }
+.motion--pan-right > img { transform: scale(1.15) translateX(-4%); }.motion--pan-right:hover > img { transform: scale(1.15) translateX(4%); }
+.motion--pan-left > img { transform: scale(1.15) translateX(4%); }.motion--pan-left:hover > img { transform: scale(1.15) translateX(-4%); }
+.motion--pan-up > img { transform: scale(1.15) translateY(4%); }.motion--pan-up:hover > img { transform: scale(1.15) translateY(-4%); }
+.motion--pan-down > img { transform: scale(1.15) translateY(-4%); }.motion--pan-down:hover > img { transform: scale(1.15) translateY(4%); }
+.motion--pan-top-right > img { transform: scale(1.15) translate(-3%,3%); }.motion--pan-top-right:hover > img { transform: scale(1.15) translate(3%,-3%); }
+.motion--pan-top-left > img { transform: scale(1.15) translate(3%,3%); }.motion--pan-top-left:hover > img { transform: scale(1.15) translate(-3%,-3%); }
+.motion--rotate-right:hover > img { transform: scale(1.1) rotate(2.5deg); }
+.motion--rotate-left:hover > img { transform: scale(1.1) rotate(-2.5deg); }
+.motion--pivot-top-left > img { transform-origin: top left; }.motion--pivot-top-left:hover > img { transform: scale(1.08) rotate(4deg); }
+.motion--pivot-bottom-right > img { transform-origin: bottom right; }.motion--pivot-bottom-right:hover > img { transform: scale(1.08) rotate(-4deg); }
+.motion--tilt-left, .motion--tilt-right, .motion--tilt-up, .motion--tilt-down, .motion--flip-y, .motion--flip-x, .motion--flip-loop { perspective: 900px; }
+.motion--tilt-left:hover > img { transform: rotateY(-9deg) rotateX(3deg) scale(1.04); }.motion--tilt-right:hover > img { transform: rotateY(9deg) rotateX(3deg) scale(1.04); }
+.motion--tilt-up:hover > img { transform: rotateX(9deg) scale(1.04); }.motion--tilt-down:hover > img { transform: rotateX(-9deg) scale(1.04); }
+.motion--flip-y:hover > img { transform: rotateY(180deg); }.motion--flip-x:hover > img { transform: rotateX(180deg); }
+.motion--slide-up > img { transform: translateY(12%); }.motion--slide-up:hover > img { transform: translateY(0); }
+.motion--slide-down > img { transform: translateY(-12%); }.motion--slide-down:hover > img { transform: translateY(0); }
+.motion--slide-left > img { transform: translateX(-12%); }.motion--slide-left:hover > img { transform: translateX(0); }
+.motion--slide-right > img { transform: translateX(12%); }.motion--slide-right:hover > img { transform: translateX(0); }
+.motion--push > img { transform: scale(1.06); }.motion--push:hover > img { transform: scale(.96); }
+.motion--bounce:hover > img { animation: bounce-zoom 620ms cubic-bezier(.2,.9,.25,1.35) both; }
+@keyframes bounce-zoom { 0% { transform:scale(1); } 65% { transform:scale(1.14); } 100% { transform:scale(1.08); } }
+
+/* Motion: loops */
+.motion--ken-burns > img { animation: ken-burns 10s ease-in-out infinite alternate; } @keyframes ken-burns { from { transform:scale(1) translate(0,0); } to { transform:scale(1.16) translate(-3%,-2%); } }
+.motion--float { overflow: visible; }.motion--float > img { animation: float 3.6s ease-in-out infinite; } @keyframes float { 0%,100% { transform:translateY(0); } 50% { transform:translateY(-12px); } }
+.motion--sway > img { animation:sway 4s ease-in-out infinite; } @keyframes sway { 0%,100% { transform:rotate(-1deg) scale(1.02); } 50% { transform:rotate(1deg) scale(1.02); } }
+.motion--pulse > img { animation:pulse 2.2s ease-in-out infinite; } @keyframes pulse { 0%,100% { transform:scale(1); } 50% { transform:scale(1.045); } }
+.motion--spin > img { animation:spin 18s linear infinite; } @keyframes spin { to { transform:rotate(360deg); } }
+.motion--shake:hover > img { animation:shake 420ms ease-in-out both; } @keyframes shake { 0%,100% { transform:translateX(0); } 20%,60% { transform:translateX(-7px); } 40%,80% { transform:translateX(7px); } }
+.motion--wiggle > img { animation:wiggle 2.6s ease-in-out infinite; } @keyframes wiggle { 0%,100% { transform:translateX(0) rotate(0); } 25% { transform:translateX(-3px) rotate(-1deg); } 75% { transform:translateX(3px) rotate(1deg); } }
+.motion--flip-loop > img { animation:flip-loop 5s ease-in-out infinite; } @keyframes flip-loop { 0%,40% { transform:rotateY(0); } 55%,100% { transform:rotateY(360deg); } }
+.motion--bob > img { animation:bob 2.4s ease-in-out infinite; } @keyframes bob { 0%,100% { transform:translateY(0) rotate(-.5deg); } 50% { transform:translateY(-9px) rotate(.5deg); } }
+
+/* Motion: entry and CSS scroll-driven */
+.motion--fade-in > img { opacity:0; animation:fade-in 900ms var(--e) forwards; } @keyframes fade-in { to { opacity:1; } }
+.motion--fade-up > img { opacity:0; animation:fade-up 900ms var(--e) forwards; } @keyframes fade-up { from { transform:translateY(32px); } to { opacity:1; transform:translateY(0); } }
+.motion--fade-down > img { opacity:0; animation:fade-down 900ms var(--e) forwards; } @keyframes fade-down { from { transform:translateY(-32px); } to { opacity:1; transform:translateY(0); } }
+.motion--fade-left > img { opacity:0; animation:fade-left 900ms var(--e) forwards; } @keyframes fade-left { from { transform:translateX(-40px); } to { opacity:1; transform:translateX(0); } }
+.motion--fade-right > img { opacity:0; animation:fade-right 900ms var(--e) forwards; } @keyframes fade-right { from { transform:translateX(40px); } to { opacity:1; transform:translateX(0); } }
+.motion--scale-reveal > img { opacity:0; animation:scale-reveal 850ms var(--e) forwards; } @keyframes scale-reveal { from { transform:scale(.82); } to { opacity:1; transform:scale(1); } }
+.motion--circle-reveal > img { clip-path:circle(0 at 50% 50%); animation:circle-reveal 1000ms var(--e) forwards; } @keyframes circle-reveal { to { clip-path:circle(75% at 50% 50%); } }
+.motion--wipe-left > img { clip-path:inset(0 100% 0 0); animation:wipe-left 900ms var(--e) forwards; } @keyframes wipe-left { to { clip-path:inset(0); } }
+.motion--wipe-right > img { clip-path:inset(0 0 0 100%); animation:wipe-right 900ms var(--e) forwards; } @keyframes wipe-right { to { clip-path:inset(0); } }
+.motion--wipe-top > img { clip-path:inset(0 0 100% 0); animation:wipe-top 900ms var(--e) forwards; } @keyframes wipe-top { to { clip-path:inset(0); } }
+.motion--wipe-bottom > img { clip-path:inset(100% 0 0 0); animation:wipe-bottom 900ms var(--e) forwards; } @keyframes wipe-bottom { to { clip-path:inset(0); } }
+@supports (animation-timeline: view()) { .motion--scroll-up { animation:scroll-up linear both; animation-timeline:view(); animation-range:entry 10% cover 35%; } @keyframes scroll-up { from { opacity:0; transform:translateY(48px) scale(.95); } to { opacity:1; transform:translateY(0) scale(1); } } .motion--scroll-zoom > img { animation:scroll-zoom linear both; animation-timeline:view(); animation-range:entry 10% cover 55%; } @keyframes scroll-zoom { from { transform:scale(1.18); } to { transform:scale(1); } } }
+
+/* Effects: filters */
+.effect--grayscale > img { filter:grayscale(1); }.effect--sepia > img { filter:sepia(1); }.effect--desaturate > img { filter:saturate(.35); }.effect--saturate > img { filter:saturate(1.7); }.effect--contrast > img { filter:contrast(1.45); }.effect--low-contrast > img { filter:contrast(.72); }.effect--brighten > img { filter:brightness(1.25); }.effect--darken > img { filter:brightness(.58); }.effect--blur > img { filter:blur(7px); transform:scale(1.05); }.effect--invert > img { filter:invert(1); }.effect--hue-rotate > img { filter:hue-rotate(145deg); }.effect--cool > img { filter:sepia(.15) saturate(1.25) hue-rotate(165deg) brightness(.95); }.effect--warm > img { filter:sepia(.38) saturate(1.25) hue-rotate(335deg) brightness(1.05); }.effect--vintage > img { filter:sepia(.42) saturate(.78) contrast(.9) brightness(1.06); }.effect--lomo > img { filter:saturate(1.55) contrast(1.18) brightness(.96); }.effect--washed > img { filter:brightness(1.24) contrast(.78) saturate(.78); }
+
+/* Effects: overlays and blends */
+.effect--black-overlay::after { background:rgba(0,0,0,.48); }.effect--white-overlay::after { background:rgba(255,255,255,.34); }.effect--brand-overlay::after { background:#6046ff; opacity:.48; mix-blend-mode:multiply; }.effect--gradient-overlay::after { background:linear-gradient(180deg,transparent 20%,rgba(9,8,18,.82) 100%); }.effect--side-gradient::after { background:linear-gradient(90deg,rgba(9,8,18,.84),transparent 72%); }.effect--duotone > img { filter:grayscale(1) contrast(1.2); }.effect--duotone::after { background:linear-gradient(135deg,#ff3cac,#784ba0 55%,#2b86c5); mix-blend-mode:color; opacity:.9; }.effect--screen::after { background:linear-gradient(135deg,#ff00c8,#00d9ff); mix-blend-mode:screen; opacity:.42; }.effect--overlay::after { background:#e14981; mix-blend-mode:overlay; opacity:.5; }.effect--soft-light::after { background:linear-gradient(135deg,#ffd6ae,#d0b4ff); mix-blend-mode:soft-light; opacity:.8; }.effect--color-burn::after { background:#ff2d55; mix-blend-mode:color-burn; opacity:.42; }.effect--color-dodge::after { background:#4de1ff; mix-blend-mode:color-dodge; opacity:.34; }.effect--multiply::after { background:#31224a; mix-blend-mode:multiply; opacity:.62; }
+
+/* Effects: light, depth, texture */
+.effect--vignette::after { background:radial-gradient(circle,transparent 34%,rgba(0,0,0,.78) 100%); }.effect--spotlight::after { background:radial-gradient(circle at 50% 45%,transparent 0 20%,rgba(0,0,0,.58) 82%); }.effect--inner-frame::after { inset:8%; border:1px solid rgba(255,255,255,.88); }.effect--double-frame::before { inset:5%; border:1px solid rgba(255,255,255,.92); }.effect--double-frame::after { inset:8%; border:1px solid rgba(255,255,255,.55); }.effect--shadow { overflow:visible; box-shadow:0 22px 50px rgba(0,0,0,.28); }.effect--inner-shadow::after { box-shadow:inset 0 0 32px rgba(0,0,0,.65); }.effect--glass::after { inset:12%; border:1px solid rgba(255,255,255,.42); border-radius:12px; background:rgba(255,255,255,.14); backdrop-filter:blur(8px); }.effect--matte { overflow:visible; padding:12px 12px 38px; border-radius:0; background:#f9f7f2; box-shadow:0 12px 28px rgba(0,0,0,.2); }.effect--matte > img { height:auto; aspect-ratio:4/3; }.effect--grain::after { inset:-50%; opacity:.18; background-image:radial-gradient(rgba(255,255,255,.9) .6px,transparent .6px); background-size:4px 4px; mix-blend-mode:soft-light; }.effect--scanlines::after { background:repeating-linear-gradient(0deg,rgba(0,0,0,.18) 0 1px,transparent 1px 4px); mix-blend-mode:multiply; }.effect--halftone::after { background-image:radial-gradient(rgba(0,0,0,.62) 1px,transparent 1px); background-size:5px 5px; mix-blend-mode:multiply; opacity:.36; }.effect--grid::after { background-image:linear-gradient(rgba(255,255,255,.3) 1px,transparent 1px),linear-gradient(90deg,rgba(255,255,255,.3) 1px,transparent 1px); background-size:24px 24px; }.effect--paper::after { background-image:repeating-linear-gradient(0deg,rgba(255,255,255,.06) 0 1px,transparent 1px 3px),repeating-linear-gradient(90deg,rgba(0,0,0,.035) 0 1px,transparent 1px 5px); mix-blend-mode:soft-light; }
+
+/* Effects: masks and crops */
+.effect--circle { border-radius:50%; }.effect--circle > img { aspect-ratio:1; }.effect--round { border-radius:32px; }.effect--diagonal { border-radius:0; clip-path:polygon(0 8%,100% 0,100% 92%,0 100%); }.effect--hexagon { border-radius:0; clip-path:polygon(25% 6.7%,75% 6.7%,100% 50%,75% 93.3%,25% 93.3%,0 50%); }.effect--diamond { border-radius:0; clip-path:polygon(50% 0,100% 50%,50% 100%,0 50%); }.effect--fade-bottom > img { -webkit-mask-image:linear-gradient(#000 65%,transparent 100%); mask-image:linear-gradient(#000 65%,transparent 100%); }.effect--fade-sides > img { -webkit-mask-image:linear-gradient(90deg,transparent,#000 15% 85%,transparent); mask-image:linear-gradient(90deg,transparent,#000 15% 85%,transparent); }.effect--circle-mask > img { -webkit-mask-image:radial-gradient(circle,#000 48%,transparent 50%); mask-image:radial-gradient(circle,#000 48%,transparent 50%); }.effect--stripe-mask > img { -webkit-mask-image:repeating-linear-gradient(135deg,#000 0 18px,transparent 18px 32px); mask-image:repeating-linear-gradient(135deg,#000 0 18px,transparent 18px 32px); }
+
+@media (max-width: 1080px) { .sample-grid { grid-template-columns:repeat(3,minmax(0,1fr)); } }
+@media (max-width: 720px) { .site-header { padding-bottom:28px; }.brand-row { align-items:flex-start; flex-direction:column; }.hero { margin-top:54px; }.section-head { grid-template-columns:1fr; gap:14px; }.section-head p { justify-self:start; }.sample-grid { grid-template-columns:repeat(2,minmax(0,1fr)); gap:10px; }.card-copy { min-height:106px; padding:11px; }.site-footer { flex-direction:column; } }
+@media (max-width: 440px) { .sample-grid { grid-template-columns:1fr; } }
+@media (prefers-reduced-motion: reduce) { *, *::before, *::after { animation-duration:1ms !important; animation-iteration-count:1 !important; scroll-behavior:auto !important; transition-duration:1ms !important; } }
+
+/* CSS-only automatic preview controller */
+#auto-preview { position: fixed; inline-size: 1px; block-size: 1px; opacity: 0; pointer-events: none; }
+.auto-toggle { display: inline-flex; align-items: center; gap: 7px; padding: 8px 12px; border: 1px solid var(--lime); border-radius: 999px; color: var(--lime); cursor: pointer; font-size: 13px; font-weight: 800; }
+.auto-toggle::after { padding: 3px 5px; color: var(--ink); background: var(--lime); content: "ON"; font: 800 10px/1 ui-monospace, SFMono-Regular, Menlo, monospace; }
+#auto-preview:not(:checked) ~ .site-header .auto-toggle::after { content: "OFF"; color: #fff; background: #555; }
+#auto-preview:checked ~ main .motion--zoom-in > img { animation:auto-zoom-in 2.8s var(--e) infinite alternate; }
+#auto-preview:checked ~ main .motion--zoom-out > img { animation:auto-zoom-out 2.8s var(--e) infinite alternate; }
+#auto-preview:checked ~ main .motion--pan-right > img { animation:auto-pan-right 3.2s var(--e) infinite alternate; }
+#auto-preview:checked ~ main .motion--pan-left > img { animation:auto-pan-left 3.2s var(--e) infinite alternate; }
+#auto-preview:checked ~ main .motion--pan-up > img { animation:auto-pan-up 3.2s var(--e) infinite alternate; }
+#auto-preview:checked ~ main .motion--pan-down > img { animation:auto-pan-down 3.2s var(--e) infinite alternate; }
+#auto-preview:checked ~ main .motion--pan-top-right > img { animation:auto-pan-top-right 3.2s var(--e) infinite alternate; }
+#auto-preview:checked ~ main .motion--pan-top-left > img { animation:auto-pan-top-left 3.2s var(--e) infinite alternate; }
+#auto-preview:checked ~ main .motion--rotate-right > img { animation:auto-rotate-right 2.8s var(--e) infinite alternate; }
+#auto-preview:checked ~ main .motion--rotate-left > img { animation:auto-rotate-left 2.8s var(--e) infinite alternate; }
+#auto-preview:checked ~ main .motion--pivot-top-left > img { animation:auto-pivot-top-left 2.8s var(--e) infinite alternate; }
+#auto-preview:checked ~ main .motion--pivot-bottom-right > img { animation:auto-pivot-bottom-right 2.8s var(--e) infinite alternate; }
+#auto-preview:checked ~ main .motion--tilt-left > img { animation:auto-tilt-left 2.8s var(--e) infinite alternate; }
+#auto-preview:checked ~ main .motion--tilt-right > img { animation:auto-tilt-right 2.8s var(--e) infinite alternate; }
+#auto-preview:checked ~ main .motion--tilt-up > img { animation:auto-tilt-up 2.8s var(--e) infinite alternate; }
+#auto-preview:checked ~ main .motion--tilt-down > img { animation:auto-tilt-down 2.8s var(--e) infinite alternate; }
+#auto-preview:checked ~ main .motion--flip-y > img { animation:auto-flip-y 2.6s var(--e) infinite alternate; }
+#auto-preview:checked ~ main .motion--flip-x > img { animation:auto-flip-x 2.6s var(--e) infinite alternate; }
+#auto-preview:checked ~ main .motion--slide-up > img { animation:auto-slide-up 2.8s var(--e) infinite alternate; }
+#auto-preview:checked ~ main .motion--slide-down > img { animation:auto-slide-down 2.8s var(--e) infinite alternate; }
+#auto-preview:checked ~ main .motion--slide-left > img { animation:auto-slide-left 2.8s var(--e) infinite alternate; }
+#auto-preview:checked ~ main .motion--slide-right > img { animation:auto-slide-right 2.8s var(--e) infinite alternate; }
+#auto-preview:checked ~ main .motion--push > img { animation:auto-push 2.8s var(--e) infinite alternate; }
+#auto-preview:checked ~ main .motion--bounce > img { animation:bounce-zoom 2.2s var(--e) infinite; }
+#auto-preview:checked ~ main .motion--shake > img { animation:shake 1.7s ease-in-out infinite; }
+#auto-preview:checked ~ main .motion--fade-in > img { animation:auto-fade-in 2.8s var(--e) infinite alternate; }
+#auto-preview:checked ~ main .motion--fade-up > img { animation:auto-fade-up 2.8s var(--e) infinite alternate; }
+#auto-preview:checked ~ main .motion--fade-down > img { animation:auto-fade-down 2.8s var(--e) infinite alternate; }
+#auto-preview:checked ~ main .motion--fade-left > img { animation:auto-fade-left 2.8s var(--e) infinite alternate; }
+#auto-preview:checked ~ main .motion--fade-right > img { animation:auto-fade-right 2.8s var(--e) infinite alternate; }
+#auto-preview:checked ~ main .motion--scale-reveal > img { animation:auto-scale-reveal 2.8s var(--e) infinite alternate; }
+#auto-preview:checked ~ main .motion--circle-reveal > img { animation:auto-circle-reveal 2.8s var(--e) infinite alternate; }
+#auto-preview:checked ~ main .motion--wipe-left > img { animation:auto-wipe-left 2.8s var(--e) infinite alternate; }
+#auto-preview:checked ~ main .motion--wipe-right > img { animation:auto-wipe-right 2.8s var(--e) infinite alternate; }
+#auto-preview:checked ~ main .motion--wipe-top > img { animation:auto-wipe-top 2.8s var(--e) infinite alternate; }
+#auto-preview:checked ~ main .motion--wipe-bottom > img { animation:auto-wipe-bottom 2.8s var(--e) infinite alternate; }
+@keyframes auto-zoom-in { from { transform:scale(1); } to { transform:scale(1.1); } } @keyframes auto-zoom-out { from { transform:scale(1.12); } to { transform:scale(1); } }
+@keyframes auto-pan-right { from { transform:scale(1.15) translateX(-4%); } to { transform:scale(1.15) translateX(4%); } } @keyframes auto-pan-left { from { transform:scale(1.15) translateX(4%); } to { transform:scale(1.15) translateX(-4%); } }
+@keyframes auto-pan-up { from { transform:scale(1.15) translateY(4%); } to { transform:scale(1.15) translateY(-4%); } } @keyframes auto-pan-down { from { transform:scale(1.15) translateY(-4%); } to { transform:scale(1.15) translateY(4%); } }
+@keyframes auto-pan-top-right { from { transform:scale(1.15) translate(-3%,3%); } to { transform:scale(1.15) translate(3%,-3%); } } @keyframes auto-pan-top-left { from { transform:scale(1.15) translate(3%,3%); } to { transform:scale(1.15) translate(-3%,-3%); } }
+@keyframes auto-rotate-right { from { transform:scale(1) rotate(0); } to { transform:scale(1.1) rotate(2.5deg); } } @keyframes auto-rotate-left { from { transform:scale(1) rotate(0); } to { transform:scale(1.1) rotate(-2.5deg); } }
+@keyframes auto-pivot-top-left { from { transform:scale(1) rotate(0); } to { transform:scale(1.08) rotate(4deg); } } @keyframes auto-pivot-bottom-right { from { transform:scale(1) rotate(0); } to { transform:scale(1.08) rotate(-4deg); } }
+@keyframes auto-tilt-left { from { transform:rotateY(0) rotateX(0) scale(1); } to { transform:rotateY(-9deg) rotateX(3deg) scale(1.04); } } @keyframes auto-tilt-right { from { transform:rotateY(0) rotateX(0) scale(1); } to { transform:rotateY(9deg) rotateX(3deg) scale(1.04); } }
+@keyframes auto-tilt-up { from { transform:rotateX(0) scale(1); } to { transform:rotateX(9deg) scale(1.04); } } @keyframes auto-tilt-down { from { transform:rotateX(0) scale(1); } to { transform:rotateX(-9deg) scale(1.04); } }
+@keyframes auto-flip-y { from { transform:rotateY(0); } to { transform:rotateY(180deg); } } @keyframes auto-flip-x { from { transform:rotateX(0); } to { transform:rotateX(180deg); } }
+@keyframes auto-slide-up { from { transform:translateY(12%); } to { transform:translateY(0); } } @keyframes auto-slide-down { from { transform:translateY(-12%); } to { transform:translateY(0); } } @keyframes auto-slide-left { from { transform:translateX(-12%); } to { transform:translateX(0); } } @keyframes auto-slide-right { from { transform:translateX(12%); } to { transform:translateX(0); } } @keyframes auto-push { from { transform:scale(1.06); } to { transform:scale(.96); } }
+@keyframes auto-fade-in { from { opacity:.15; } to { opacity:1; } } @keyframes auto-fade-up { from { opacity:.15; transform:translateY(32px); } to { opacity:1; transform:translateY(0); } } @keyframes auto-fade-down { from { opacity:.15; transform:translateY(-32px); } to { opacity:1; transform:translateY(0); } } @keyframes auto-fade-left { from { opacity:.15; transform:translateX(-40px); } to { opacity:1; transform:translateX(0); } } @keyframes auto-fade-right { from { opacity:.15; transform:translateX(40px); } to { opacity:1; transform:translateX(0); } } @keyframes auto-scale-reveal { from { opacity:.15; transform:scale(.82); } to { opacity:1; transform:scale(1); } } @keyframes auto-circle-reveal { from { clip-path:circle(0 at 50% 50%); } to { clip-path:circle(75% at 50% 50%); } } @keyframes auto-wipe-left { from { clip-path:inset(0 100% 0 0); } to { clip-path:inset(0); } } @keyframes auto-wipe-right { from { clip-path:inset(0 0 0 100%); } to { clip-path:inset(0); } } @keyframes auto-wipe-top { from { clip-path:inset(0 0 100% 0); } to { clip-path:inset(0); } } @keyframes auto-wipe-bottom { from { clip-path:inset(100% 0 0 0); } to { clip-path:inset(0); } }
+@supports not (animation-timeline: view()) { #auto-preview:checked ~ main .motion--scroll-up { animation:auto-fade-up 2.8s var(--e) infinite alternate; } #auto-preview:checked ~ main .motion--scroll-zoom > img { animation:auto-zoom-out 2.8s var(--e) infinite alternate; } }
+
+
+
+    :root {
+      --ink: #151515;
+      --paper: #f2efe9;
+      --blue: #1428ff;
+      --lime: #d8ff3e;
+      --pink: #ff3dae;
+      --line: rgba(21, 21, 21, .18);
+      --e: cubic-bezier(.2, .7, .2, 1);
+    }
+    * { box-sizing: border-box; }
+    html { scroll-behavior: smooth; }
+    body { margin: 0; color: var(--ink); background: var(--paper); font-family: Inter, ui-sans-serif, system-ui, -apple-system, BlinkMacSystemFont, "Hiragino Sans", "Yu Gothic", sans-serif; }
+    a { color: inherit; }
+    #auto-preview { position: fixed; inline-size: 1px; block-size: 1px; opacity: 0; pointer-events: none; }
+    .site-header { padding: 24px clamp(20px, 5vw, 72px) 36px; color: #fff; background: var(--ink); }
+    .brand-row { display: flex; align-items: center; justify-content: space-between; gap: 24px; max-width: 1580px; margin: 0 auto; }
+    .brand { display: flex; align-items: center; gap: 14px; font-weight: 800; letter-spacing: -.03em; }
+    .brand img { width: 42px; height: 42px; border-radius: 9px; }
+    .brand span { color: var(--lime); }
+    .site-nav { display: flex; flex-wrap: wrap; justify-content: flex-end; gap: 10px; }
+    .site-nav a, .auto-toggle { padding: 8px 12px; border: 1px solid rgba(255,255,255,.32); border-radius: 999px; color: #fff; cursor: pointer; text-decoration: none; font-size: 13px; font-weight: 700; }
+    .auto-toggle { border-color: var(--lime); color: var(--lime); }
+    .auto-toggle::after { margin-left: 7px; padding: 3px 5px; color: var(--ink); background: var(--lime); content: "ON"; font: 800 10px/1 ui-monospace, SFMono-Regular, Menlo, monospace; }
+    #auto-preview:not(:checked) ~ .site-header .auto-toggle::after { content: "OFF"; color: #fff; background: #555; }
+    .hero { max-width: 1580px; margin: clamp(48px, 8vw, 112px) auto 0; }
+    .eyebrow { display: inline-flex; gap: 8px; align-items: center; margin: 0 0 18px; color: var(--lime); font: 800 12px/1 ui-monospace, SFMono-Regular, Menlo, monospace; letter-spacing: .12em; }
+    .eyebrow::before { width: 8px; height: 8px; border-radius: 50%; background: var(--pink); content: ""; }
+    h1 { max-width: 1120px; margin: 0; font-size: clamp(43px, 8vw, 126px); line-height: .86; letter-spacing: -.08em; }
+    h1 em { color: var(--lime); font-style: normal; }
+    .hero p { max-width: 710px; margin: 30px 0 0; color: rgba(255,255,255,.76); font-size: clamp(15px, 1.5vw, 19px); line-height: 1.8; }
+    main { max-width: 1580px; margin: 0 auto; padding: clamp(52px, 8vw, 120px) clamp(20px, 5vw, 72px); }
+    .collection { scroll-margin-top: 24px; }
+    .collection + .collection { margin-top: clamp(72px, 12vw, 180px); }
+    .section-head { display: grid; grid-template-columns: auto 1fr; gap: 24px; align-items: end; padding-bottom: 18px; border-bottom: 3px solid var(--ink); }
+    .section-id { color: var(--blue); font: 800 13px/1 ui-monospace, SFMono-Regular, Menlo, monospace; letter-spacing: .12em; }
+    h2 { margin: 0; font-size: clamp(36px, 5.5vw, 76px); letter-spacing: -.06em; line-height: .95; }
+    .section-head p { max-width: 590px; margin: 0; justify-self: end; font-size: 14px; line-height: 1.7; }
+    .transition-grid { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 16px; padding-top: 24px; }
+    .sample-card { min-width: 0; border: 1px solid var(--line); background: #fff; box-shadow: 4px 4px 0 rgba(21,21,21,.06); }
+    .transition-stage { position: relative; overflow: hidden; isolation: isolate; aspect-ratio: 16 / 10; background: #171717; }
+    .transition-stage img { position: absolute; inset: 0; display: block; width: 100%; height: 100%; object-fit: cover; }
+    .transition-stage .image-a { z-index: 0; }
+    .transition-stage .image-b { z-index: 1; }
+    .card-copy { min-height: 112px; padding: 13px 14px 16px; }
+    .index, .chip { display: inline-block; font: 800 11px/1 ui-monospace, SFMono-Regular, Menlo, monospace; letter-spacing: .08em; }
+    .index { color: var(--blue); }
+    .chip { margin-left: 8px; padding: 4px 5px; color: var(--ink); background: var(--lime); }
+    h3 { margin: 12px 0 5px; font-size: 17px; letter-spacing: -.03em; }
+    .card-copy p { margin: 0; color: #5a5853; font-size: 12px; line-height: 1.5; }
+
+    /* Card transition animations: auto ON or card hover */
+    #auto-preview:checked ~ main .transition--crossfade .image-b, .transition--crossfade:hover .image-b { animation: crossfade 4s var(--e) infinite; }
+    #auto-preview:checked ~ main .transition--slide-left .image-a, .transition--slide-left:hover .image-a { animation: slide-a-left 4s var(--e) infinite; }
+    #auto-preview:checked ~ main .transition--slide-left .image-b, .transition--slide-left:hover .image-b { animation: slide-b-left 4s var(--e) infinite; }
+    #auto-preview:checked ~ main .transition--slide-right .image-a, .transition--slide-right:hover .image-a { animation: slide-a-right 4s var(--e) infinite; }
+    #auto-preview:checked ~ main .transition--slide-right .image-b, .transition--slide-right:hover .image-b { animation: slide-b-right 4s var(--e) infinite; }
+    #auto-preview:checked ~ main .transition--zoom .image-a, .transition--zoom:hover .image-a { animation: zoom-a 4s var(--e) infinite; }
+    #auto-preview:checked ~ main .transition--zoom .image-b, .transition--zoom:hover .image-b { animation: zoom-b 4s var(--e) infinite; }
+    #auto-preview:checked ~ main .transition--iris .image-b, .transition--iris:hover .image-b { animation: iris 4s var(--e) infinite; }
+    #auto-preview:checked ~ main .transition--diagonal .image-b, .transition--diagonal:hover .image-b { animation: diagonal 4s var(--e) infinite; }
+    #auto-preview:checked ~ main .transition--vertical .image-b, .transition--vertical:hover .image-b { animation: vertical 4s var(--e) infinite; }
+    #auto-preview:checked ~ main .transition--horizontal .image-b, .transition--horizontal:hover .image-b { animation: horizontal 4s var(--e) infinite; }
+    #auto-preview:checked ~ main .transition--cube .image-a, .transition--cube:hover .image-a { animation: cube-a 4s var(--e) infinite; }
+    #auto-preview:checked ~ main .transition--cube .image-b, .transition--cube:hover .image-b { animation: cube-b 4s var(--e) infinite; }
+    #auto-preview:checked ~ main .transition--flip .image-a, .transition--flip:hover .image-a { animation: flip-a 4s var(--e) infinite; }
+    #auto-preview:checked ~ main .transition--flip .image-b, .transition--flip:hover .image-b { animation: flip-b 4s var(--e) infinite; }
+    #auto-preview:checked ~ main .transition--blur .image-a, .transition--blur:hover .image-a { animation: blur-a 4s var(--e) infinite; }
+    #auto-preview:checked ~ main .transition--blur .image-b, .transition--blur:hover .image-b { animation: blur-b 4s var(--e) infinite; }
+    #auto-preview:checked ~ main .transition--mask .image-b, .transition--mask:hover .image-b { animation: mask-sweep 4s var(--e) infinite; }
+
+    @keyframes crossfade { 0%, 35% { opacity: 0; } 55%, 85% { opacity: 1; } 100% { opacity: 0; } }
+    @keyframes slide-a-left { 0%,35% { transform: translateX(0); } 55%,85% { transform: translateX(-100%); } 100% { transform: translateX(0); } }
+    @keyframes slide-b-left { 0%,35% { transform: translateX(100%); } 55%,85% { transform: translateX(0); } 100% { transform: translateX(100%); } }
+    @keyframes slide-a-right { 0%,35% { transform: translateX(0); } 55%,85% { transform: translateX(100%); } 100% { transform: translateX(0); } }
+    @keyframes slide-b-right { 0%,35% { transform: translateX(-100%); } 55%,85% { transform: translateX(0); } 100% { transform: translateX(-100%); } }
+    @keyframes zoom-a { 0%,35% { opacity: 1; transform: scale(1); } 55%,85% { opacity: 0; transform: scale(.86); } 100% { opacity: 1; transform: scale(1); } }
+    @keyframes zoom-b { 0%,35% { opacity: 0; transform: scale(1.24); } 55%,85% { opacity: 1; transform: scale(1); } 100% { opacity: 0; transform: scale(1.24); } }
+    @keyframes iris { 0%,35% { clip-path: circle(0 at 50% 50%); } 55%,85% { clip-path: circle(75% at 50% 50%); } 100% { clip-path: circle(0 at 50% 50%); } }
+    @keyframes diagonal { 0%,35% { clip-path: polygon(0 0, 0 0, 0 100%, 0 100%); } 55%,85% { clip-path: polygon(0 0, 100% 0, 100% 100%, 0 100%); } 100% { clip-path: polygon(0 0, 0 0, 0 100%, 0 100%); } }
+    @keyframes vertical { 0%,35% { clip-path: inset(0 50%); } 55%,85% { clip-path: inset(0); } 100% { clip-path: inset(0 50%); } }
+    @keyframes horizontal { 0%,35% { clip-path: inset(50% 0); } 55%,85% { clip-path: inset(0); } 100% { clip-path: inset(50% 0); } }
+    .transition--cube { perspective: 900px; }.transition--cube img { transform-origin: center; backface-visibility: hidden; }
+    @keyframes cube-a { 0%,35% { transform: rotateY(0); opacity:1; } 55%,85% { transform: rotateY(90deg); opacity:0; } 100% { transform: rotateY(0); opacity:1; } }
+    @keyframes cube-b { 0%,35% { transform: rotateY(-90deg); opacity:0; } 55%,85% { transform: rotateY(0); opacity:1; } 100% { transform: rotateY(-90deg); opacity:0; } }
+    .transition--flip { perspective: 900px; }.transition--flip img { transform-origin: center; backface-visibility: hidden; }
+    @keyframes flip-a { 0%,35% { transform: rotateX(0); opacity:1; } 55%,85% { transform: rotateX(-180deg); opacity:0; } 100% { transform: rotateX(0); opacity:1; } }
+    @keyframes flip-b { 0%,35% { transform: rotateX(180deg); opacity:0; } 55%,85% { transform: rotateX(0); opacity:1; } 100% { transform: rotateX(180deg); opacity:0; } }
+    @keyframes blur-a { 0%,35% { opacity:1; filter:blur(0); transform:scale(1); } 55%,85% { opacity:0; filter:blur(12px); transform:scale(1.06); } 100% { opacity:1; filter:blur(0); transform:scale(1); } }
+    @keyframes blur-b { 0%,35% { opacity:0; filter:blur(12px); transform:scale(1.06); } 55%,85% { opacity:1; filter:blur(0); transform:scale(1); } 100% { opacity:0; filter:blur(12px); transform:scale(1.06); } }
+    .transition--mask .image-b { -webkit-mask-image: linear-gradient(90deg, #000 40%, transparent 60%); -webkit-mask-size: 260% 100%; -webkit-mask-position: 100% 0; mask-image: linear-gradient(90deg, #000 40%, transparent 60%); mask-size: 260% 100%; mask-position: 100% 0; }
+    @keyframes mask-sweep { 0%,35% { -webkit-mask-position: 100% 0; mask-position: 100% 0; } 55%,85% { -webkit-mask-position: 0 0; mask-position: 0 0; } 100% { -webkit-mask-position: 100% 0; mask-position: 100% 0; } }
+
+    /* Layered motion demonstrations */
+    .layer-grid { display: grid; grid-template-columns: 1.25fr .75fr; gap: 24px; padding-top: 24px; }
+    .scene-card { border: 1px solid var(--line); background: #fff; box-shadow: 4px 4px 0 rgba(21,21,21,.06); }
+    .layer-scene { position: relative; overflow: hidden; isolation: isolate; min-height: 430px; background: linear-gradient(#77c8ff 0%, #d9f4ff 58%, #ffefcf 100%); }
+    .layer-scene > * { position: absolute; pointer-events: none; }
+    .sun { z-index: 0; top: 16%; right: 13%; width: 86px; aspect-ratio: 1; border-radius: 50%; background: #fff1aa; box-shadow: 0 0 48px rgba(255,241,170,.85); }
+    .mountain { z-index: 1; right: -12%; bottom: 20%; left: -12%; height: 44%; background: #7c93b5; clip-path: polygon(0 100%, 14% 42%, 25% 72%, 38% 18%, 51% 70%, 68% 34%, 82% 66%, 100% 12%, 100% 100%); }
+    .mountain--near { z-index: 3; right: -10%; bottom: 11%; left: -10%; height: 36%; background: #3f5f6b; clip-path: polygon(0 100%, 13% 44%, 28% 66%, 43% 24%, 57% 74%, 72% 31%, 90% 64%, 100% 42%, 100% 100%); }
+    .ground { z-index: 5; right: -8%; bottom: -10%; left: -8%; height: 28%; background: #1e4b42; clip-path: ellipse(65% 74% at 48% 100%); }
+    .mist { z-index: 4; right: -18%; bottom: 18%; left: -18%; height: 22%; border-radius: 50%; background: rgba(255,255,255,.35); filter: blur(18px); }
+    .cloud { z-index: 2; width: 180px; height: 54px; border-radius: 999px; background: rgba(255,255,255,.84); filter: blur(.1px); box-shadow: 46px -20px 0 12px rgba(255,255,255,.84), 106px -5px 0 4px rgba(255,255,255,.84), -32px 4px 0 2px rgba(255,255,255,.84); }
+    .cloud--far { top: 21%; left: -190px; opacity: .54; transform: scale(.55); }
+    .cloud--mid { top: 34%; left: -220px; opacity: .8; transform: scale(.78); }
+    .cloud--front { top: 13%; left: -260px; transform: scale(1.15); }
+    #auto-preview:checked ~ main .cloud--far { animation: cloud-far 29s linear infinite; }
+    #auto-preview:checked ~ main .cloud--mid { animation: cloud-mid 20s linear infinite; }
+    #auto-preview:checked ~ main .cloud--front { animation: cloud-front 14s linear infinite; }
+    .layer-scene:hover .cloud--far { animation: cloud-far 14s linear infinite; }.layer-scene:hover .cloud--mid { animation: cloud-mid 9s linear infinite; }.layer-scene:hover .cloud--front { animation: cloud-front 6s linear infinite; }
+    @keyframes cloud-far { to { translate: calc(100vw + 460px) 0; } } @keyframes cloud-mid { to { translate: calc(100vw + 520px) 0; } } @keyframes cloud-front { to { translate: calc(100vw + 600px) 0; } }
+    #auto-preview:checked ~ main .mist { animation: mist 9s ease-in-out infinite alternate; } @keyframes mist { from { translate:-3% 0; opacity:.2; } to { translate:4% 0; opacity:.62; } }
+    .scene-caption { padding: 18px 20px 22px; }.scene-caption h3 { margin-top: 0; }.scene-caption p { max-width: 720px; margin: 0; color: #5a5853; font-size: 13px; line-height: 1.7; }
+    .layer-stack { display: grid; gap: 16px; }
+    .tip-card { padding: 20px; border: 1px solid var(--line); background: #fff; }.tip-card h3 { margin-top: 0; }.tip-card p, .tip-card li { color: #4d4b47; font-size: 13px; line-height: 1.7; }.tip-card ul { margin: 0; padding-left: 18px; }
+    .speed-table { width: 100%; border-collapse: collapse; font-size: 12px; }.speed-table th, .speed-table td { padding: 10px 8px; border-bottom: 1px solid var(--line); text-align: left; }.speed-table th { color: var(--blue); font: 800 10px/1 ui-monospace, SFMono-Regular, Menlo, monospace; letter-spacing: .08em; }
+    .code-panel { overflow: auto; padding: 20px; color: #e9e9e9; background: var(--ink); }.code-panel h3 { color: var(--lime); }.code-panel pre { margin: 0; font: 12px/1.65 ui-monospace, SFMono-Regular, Menlo, monospace; white-space: pre; }
+    .site-footer { display: flex; justify-content: space-between; gap: 16px; padding: 22px clamp(20px, 5vw, 72px); color: #fff; background: var(--ink); font: 700 12px/1.6 ui-monospace, SFMono-Regular, Menlo, monospace; }
+    @media (max-width: 1050px) { .transition-grid { grid-template-columns: repeat(2, minmax(0, 1fr)); }.layer-grid { grid-template-columns: 1fr; } }
+    @media (max-width: 720px) { .site-header { padding-bottom: 28px; }.brand-row { align-items: flex-start; flex-direction: column; }.site-nav { justify-content: flex-start; }.hero { margin-top: 54px; }.section-head { grid-template-columns: 1fr; gap: 14px; }.section-head p { justify-self: start; }.transition-grid { grid-template-columns: 1fr; }.layer-scene { min-height: 340px; }.site-footer { flex-direction: column; } }
+    @media (prefers-reduced-motion: reduce) { *, *::before, *::after { animation-duration: 1ms !important; animation-iteration-count: 1 !important; scroll-behavior: auto !important; } }
+  
+    /* Image A / Image B boundary treatments */
+    .seam-grid { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 16px; padding-top: 24px; }
+    .seam-stage { position: relative; overflow: hidden; isolation: isolate; aspect-ratio: 16 / 9; background: #151515; }
+    .seam-stage .image-b, .seam-stage .image-a { position: absolute; inset: 0; width: 100%; height: 100%; object-fit: cover; }
+    .seam-stage .image-b { z-index: 0; }
+    .seam-stage .image-a { z-index: 1; }
+    .seam-stage .tag { position: absolute; z-index: 4; top: 14px; padding: 5px 7px; color: #151515; background: #fff; font: 800 10px/1 ui-monospace, SFMono-Regular, Menlo, monospace; letter-spacing: .08em; }
+    .seam-stage .tag--a { left: 14px; }.seam-stage .tag--b { right: 14px; background: var(--lime); }
+    .seam--straight .image-a { clip-path: polygon(0 0, 51% 0, 51% 100%, 0 100%); }
+    .seam--diagonal .image-a { clip-path: polygon(0 0, 61% 0, 43% 100%, 0 100%); }
+    .seam--curve .image-a { width: 63%; border-radius: 0 60% 60% 0 / 0 52% 52% 0; }
+    .seam--wave .image-a { clip-path: polygon(0 0, 48% 0, 55% 10%, 48% 20%, 56% 30%, 48% 40%, 55% 50%, 47% 60%, 54% 70%, 46% 80%, 53% 90%, 47% 100%, 0 100%); }
+    .seam--zigzag .image-a { clip-path: polygon(0 0, 53% 0, 45% 10%, 55% 20%, 45% 30%, 55% 40%, 45% 50%, 55% 60%, 45% 70%, 55% 80%, 45% 90%, 53% 100%, 0 100%); }
+    .seam--torn .image-a { clip-path: polygon(0 0, 51% 0, 47% 6%, 54% 13%, 46% 20%, 52% 28%, 45% 37%, 54% 45%, 47% 54%, 53% 62%, 45% 71%, 52% 80%, 46% 90%, 51% 100%, 0 100%); }
+    .seam--soft .image-a { -webkit-mask-image: linear-gradient(90deg, #000 0 42%, transparent 62%); mask-image: linear-gradient(90deg, #000 0 42%, transparent 62%); }
+    .seam--slats .image-a { clip-path: polygon(0 0, 48% 0, 48% 8%, 56% 8%, 56% 16%, 48% 16%, 48% 24%, 56% 24%, 56% 32%, 48% 32%, 48% 40%, 56% 40%, 56% 48%, 48% 48%, 48% 56%, 56% 56%, 56% 64%, 48% 64%, 48% 72%, 56% 72%, 56% 80%, 48% 80%, 48% 88%, 56% 88%, 56% 100%, 0 100%); }
+    .seam--center .image-a { clip-path: polygon(0 0, 52% 0, 59% 50%, 52% 100%, 0 100%); }
+    .seam--ribbon .image-a { clip-path: polygon(0 0, 49% 0, 60% 16%, 49% 33%, 59% 50%, 48% 67%, 59% 84%, 49% 100%, 0 100%); }
+    .seam--ribbon::after { position: absolute; z-index: 3; top: 0; bottom: 0; left: 49%; width: 12%; background: linear-gradient(90deg, rgba(255,255,255,0), rgba(255,255,255,.62), rgba(255,255,255,0)); mix-blend-mode: overlay; clip-path: polygon(0 0, 90% 16%, 0 33%, 90% 50%, 0 67%, 90% 84%, 0 100%); content: ""; }
+    .seam-card .card-copy { min-height: 108px; }
+
+    /* Image-only whiteout: image A → white → image B */
+    .seam-card--image-only { grid-column: 1 / -1; }
+    .seam-card--image-only .seam-stage { aspect-ratio: 21 / 9; }
+    .seam--whiteout .image-a { z-index: 1; clip-path: none; }
+    .seam--whiteout .image-b { z-index: 0; opacity: 0; }
+    .seam--whiteout::before { position: absolute; z-index: 2; inset: 0; background: #fff; content: ""; opacity: 0; pointer-events: none; }
+    #auto-preview:checked ~ main .seam--whiteout .image-a { animation: whiteout-image-a 5.2s var(--e) infinite alternate; }
+    #auto-preview:checked ~ main .seam--whiteout .image-b { animation: whiteout-image-b 5.2s var(--e) infinite alternate; }
+    #auto-preview:checked ~ main .seam--whiteout::before { animation: whiteout-flash 5.2s var(--e) infinite alternate; }
+    .seam--whiteout:hover .image-a { animation: whiteout-image-a 2.6s var(--e) infinite alternate; }
+    .seam--whiteout:hover .image-b { animation: whiteout-image-b 2.6s var(--e) infinite alternate; }
+    .seam--whiteout:hover::before { animation: whiteout-flash 2.6s var(--e) infinite alternate; }
+    @keyframes whiteout-image-a { 0%, 37% { opacity: 1; } 47%, 100% { opacity: 0; } }
+    @keyframes whiteout-image-b { 0%, 53% { opacity: 0; } 63%, 100% { opacity: 1; } }
+    @keyframes whiteout-flash { 0%, 32% { opacity: 0; } 50% { opacity: 1; } 68%, 100% { opacity: 0; } }
+
+    @media (max-width: 720px) { .seam-grid { grid-template-columns: 1fr; } }
+
+  
+
+    /* Combined catalogue shell */
+    .catalogue-stats { display: flex; flex-wrap: wrap; gap: 8px; max-width: 760px; margin-top: 28px; }
+    .catalogue-stats span { padding: 8px 10px; border: 1px solid rgba(255,255,255,.34); border-radius: 999px; color: #fff; font: 800 11px/1 ui-monospace, SFMono-Regular, Menlo, monospace; letter-spacing: .06em; }
+    .catalogue-stats span:nth-child(1), .catalogue-stats span:nth-child(4) { color: var(--ink); background: var(--lime); border-color: var(--lime); }
+    .catalogue-stats span:nth-child(2) { background: var(--pink); border-color: var(--pink); }
+    .catalogue-stats span:nth-child(3) { color: var(--ink); background: #fff; border-color: #fff; }
+    .site-nav { align-items: center; }
+    @media (max-width: 720px) { .catalogue-stats { margin-top: 22px; } }
+
+  </style>
+</head>
+<body>
+<input id="auto-preview" type="checkbox" checked aria-label="モーション自動再生">
+<header class="site-header">
+  <div class="brand-row">
+    <div class="brand"><img src="logo.svg" alt=""><span>CSS</span> IMAGE MOTION LAB</div>
+    <nav class="site-nav" aria-label="セクション移動">
+      <label class="auto-toggle" for="auto-preview">AUTO PLAY</label>
+      <a href="#motion">MOTION / 46</a>
+      <a href="#effects">EFFECT / 50</a>
+      <a href="#transitions">TRANSITION / 14</a>
+      <a href="#seams">IMAGE SEAM / 11</a>
+      <a href="#layers">LAYER MOTION</a>
+    </nav>
+  </div>
+  <div class="hero">
+    <p class="eyebrow">HTML + CSS ONLY · ALL-IN-ONE LIBRARY</p>
+    <h1>IMAGE<br><em>MOTION</em>, EFFECTS<br>&amp; TRANSITIONS</h1>
+    <p>画像表現に必要なモーション、静的エフェクト、画像A/Bの切り替え、画像同士の境界デザイン、そして雲や霧をレイヤーごとに動かす実装例を、1ページに集約しました。<strong>AUTO PLAY</strong> は初期状態でONです。</p>
+    <div class="catalogue-stats" aria-label="収録数"><span>46 MOTIONS</span><span>50 EFFECTS</span><span>14 TRANSITIONS</span><span>11 IMAGE SEAMS</span><span>LAYER GUIDE</span></div>
+  </div>
+</header>
+<main>
+  <section id="motion" class="collection" aria-labelledby="motion-title">
+    <div class="section-head"><div><div class="section-id">COLLECTION 01</div><h2 id="motion-title">MOTION</h2></div><p>移動・拡縮・回転・リビールのみを使った46種の実演です。AUTO PLAYをOFFにすると、HOVERカードを直接操作できます。</p></div>
+    <div class="sample-grid"><article class="sample-card sample-card--motion">
+  <div class="preview motion--zoom-in">
+    <img src="assets/portrait.jpg" alt="CSS motion sample: Zoom In">
+  </div>
+  <div class="card-copy">
+    <span class="index">01</span><span class="chip">HOVER</span>
+    <h3>Zoom In</h3>
+    <p>中央から拡大</p>
+  </div>
+</article>
+<article class="sample-card sample-card--motion">
+  <div class="preview motion--zoom-out">
+    <img src="assets/architecture.jpg" alt="CSS motion sample: Zoom Out">
+  </div>
+  <div class="card-copy">
+    <span class="index">02</span><span class="chip">HOVER</span>
+    <h3>Zoom Out</h3>
+    <p>寄った状態から引く</p>
+  </div>
+</article>
+<article class="sample-card sample-card--motion">
+  <div class="preview motion--pan-right">
+    <img src="assets/sky.jpg" alt="CSS motion sample: Pan Right">
+  </div>
+  <div class="card-copy">
+    <span class="index">03</span><span class="chip">HOVER</span>
+    <h3>Pan Right</h3>
+    <p>左から右へ視点移動</p>
+  </div>
+</article>
+<article class="sample-card sample-card--motion">
+  <div class="preview motion--pan-left">
+    <img src="assets/floral.jpg" alt="CSS motion sample: Pan Left">
+  </div>
+  <div class="card-copy">
+    <span class="index">04</span><span class="chip">HOVER</span>
+    <h3>Pan Left</h3>
+    <p>右から左へ視点移動</p>
+  </div>
+</article>
+<article class="sample-card sample-card--motion">
+  <div class="preview motion--pan-up">
+    <img src="assets/paint.jpg" alt="CSS motion sample: Pan Up">
+  </div>
+  <div class="card-copy">
+    <span class="index">05</span><span class="chip">HOVER</span>
+    <h3>Pan Up</h3>
+    <p>下から上へ視点移動</p>
+  </div>
+</article>
+<article class="sample-card sample-card--motion">
+  <div class="preview motion--pan-down">
+    <img src="assets/curves.jpg" alt="CSS motion sample: Pan Down">
+  </div>
+  <div class="card-copy">
+    <span class="index">06</span><span class="chip">HOVER</span>
+    <h3>Pan Down</h3>
+    <p>上から下へ視点移動</p>
+  </div>
+</article>
+<article class="sample-card sample-card--motion">
+  <div class="preview motion--pan-top-right">
+    <img src="assets/botanical.jpg" alt="CSS motion sample: Pan Top Right">
+  </div>
+  <div class="card-copy">
+    <span class="index">07</span><span class="chip">HOVER</span>
+    <h3>Pan Top Right</h3>
+    <p>左下から右上へ移動</p>
+  </div>
+</article>
+<article class="sample-card sample-card--motion">
+  <div class="preview motion--pan-top-left">
+    <img src="assets/violet.jpg" alt="CSS motion sample: Pan Top Left">
+  </div>
+  <div class="card-copy">
+    <span class="index">08</span><span class="chip">HOVER</span>
+    <h3>Pan Top Left</h3>
+    <p>右下から左上へ移動</p>
+  </div>
+</article>
+<article class="sample-card sample-card--motion">
+  <div class="preview motion--rotate-right">
+    <img src="assets/portrait.jpg" alt="CSS motion sample: Rotate Right">
+  </div>
+  <div class="card-copy">
+    <span class="index">09</span><span class="chip">HOVER</span>
+    <h3>Rotate Right</h3>
+    <p>右回転しながら拡大</p>
+  </div>
+</article>
+<article class="sample-card sample-card--motion">
+  <div class="preview motion--rotate-left">
+    <img src="assets/architecture.jpg" alt="CSS motion sample: Rotate Left">
+  </div>
+  <div class="card-copy">
+    <span class="index">10</span><span class="chip">HOVER</span>
+    <h3>Rotate Left</h3>
+    <p>左回転しながら拡大</p>
+  </div>
+</article>
+<article class="sample-card sample-card--motion">
+  <div class="preview motion--pivot-top-left">
+    <img src="assets/sky.jpg" alt="CSS motion sample: Pivot Top Left">
+  </div>
+  <div class="card-copy">
+    <span class="index">11</span><span class="chip">HOVER</span>
+    <h3>Pivot Top Left</h3>
+    <p>左上を軸に回転</p>
+  </div>
+</article>
+<article class="sample-card sample-card--motion">
+  <div class="preview motion--pivot-bottom-right">
+    <img src="assets/floral.jpg" alt="CSS motion sample: Pivot Bottom Right">
+  </div>
+  <div class="card-copy">
+    <span class="index">12</span><span class="chip">HOVER</span>
+    <h3>Pivot Bottom Right</h3>
+    <p>右下を軸に回転</p>
+  </div>
+</article>
+<article class="sample-card sample-card--motion">
+  <div class="preview motion--tilt-left">
+    <img src="assets/paint.jpg" alt="CSS motion sample: Tilt Left">
+  </div>
+  <div class="card-copy">
+    <span class="index">13</span><span class="chip">HOVER</span>
+    <h3>Tilt Left</h3>
+    <p>左へ3Dチルト</p>
+  </div>
+</article>
+<article class="sample-card sample-card--motion">
+  <div class="preview motion--tilt-right">
+    <img src="assets/curves.jpg" alt="CSS motion sample: Tilt Right">
+  </div>
+  <div class="card-copy">
+    <span class="index">14</span><span class="chip">HOVER</span>
+    <h3>Tilt Right</h3>
+    <p>右へ3Dチルト</p>
+  </div>
+</article>
+<article class="sample-card sample-card--motion">
+  <div class="preview motion--tilt-up">
+    <img src="assets/botanical.jpg" alt="CSS motion sample: Tilt Up">
+  </div>
+  <div class="card-copy">
+    <span class="index">15</span><span class="chip">HOVER</span>
+    <h3>Tilt Up</h3>
+    <p>上へ3Dチルト</p>
+  </div>
+</article>
+<article class="sample-card sample-card--motion">
+  <div class="preview motion--tilt-down">
+    <img src="assets/violet.jpg" alt="CSS motion sample: Tilt Down">
+  </div>
+  <div class="card-copy">
+    <span class="index">16</span><span class="chip">HOVER</span>
+    <h3>Tilt Down</h3>
+    <p>下へ3Dチルト</p>
+  </div>
+</article>
+<article class="sample-card sample-card--motion">
+  <div class="preview motion--flip-y">
+    <img src="assets/portrait.jpg" alt="CSS motion sample: Flip Y">
+  </div>
+  <div class="card-copy">
+    <span class="index">17</span><span class="chip">HOVER</span>
+    <h3>Flip Y</h3>
+    <p>Y軸で反転</p>
+  </div>
+</article>
+<article class="sample-card sample-card--motion">
+  <div class="preview motion--flip-x">
+    <img src="assets/architecture.jpg" alt="CSS motion sample: Flip X">
+  </div>
+  <div class="card-copy">
+    <span class="index">18</span><span class="chip">HOVER</span>
+    <h3>Flip X</h3>
+    <p>X軸で反転</p>
+  </div>
+</article>
+<article class="sample-card sample-card--motion">
+  <div class="preview motion--slide-up">
+    <img src="assets/sky.jpg" alt="CSS motion sample: Slide Up">
+  </div>
+  <div class="card-copy">
+    <span class="index">19</span><span class="chip">HOVER</span>
+    <h3>Slide Up</h3>
+    <p>下から上へ入る</p>
+  </div>
+</article>
+<article class="sample-card sample-card--motion">
+  <div class="preview motion--slide-down">
+    <img src="assets/floral.jpg" alt="CSS motion sample: Slide Down">
+  </div>
+  <div class="card-copy">
+    <span class="index">20</span><span class="chip">HOVER</span>
+    <h3>Slide Down</h3>
+    <p>上から下へ入る</p>
+  </div>
+</article>
+<article class="sample-card sample-card--motion">
+  <div class="preview motion--slide-left">
+    <img src="assets/paint.jpg" alt="CSS motion sample: Slide Left">
+  </div>
+  <div class="card-copy">
+    <span class="index">21</span><span class="chip">HOVER</span>
+    <h3>Slide Left</h3>
+    <p>左から入る</p>
+  </div>
+</article>
+<article class="sample-card sample-card--motion">
+  <div class="preview motion--slide-right">
+    <img src="assets/curves.jpg" alt="CSS motion sample: Slide Right">
+  </div>
+  <div class="card-copy">
+    <span class="index">22</span><span class="chip">HOVER</span>
+    <h3>Slide Right</h3>
+    <p>右から入る</p>
+  </div>
+</article>
+<article class="sample-card sample-card--motion">
+  <div class="preview motion--push">
+    <img src="assets/botanical.jpg" alt="CSS motion sample: Push">
+  </div>
+  <div class="card-copy">
+    <span class="index">23</span><span class="chip">HOVER</span>
+    <h3>Push</h3>
+    <p>奥へ押し込む</p>
+  </div>
+</article>
+<article class="sample-card sample-card--motion">
+  <div class="preview motion--bounce">
+    <img src="assets/violet.jpg" alt="CSS motion sample: Bounce Zoom">
+  </div>
+  <div class="card-copy">
+    <span class="index">24</span><span class="chip">HOVER</span>
+    <h3>Bounce Zoom</h3>
+    <p>弾むように拡大</p>
+  </div>
+</article>
+<article class="sample-card sample-card--motion">
+  <div class="preview motion--ken-burns">
+    <img src="assets/portrait.jpg" alt="CSS motion sample: Ken Burns">
+  </div>
+  <div class="card-copy">
+    <span class="index">25</span><span class="chip">LOOP</span>
+    <h3>Ken Burns</h3>
+    <p>拡大＋斜めパン</p>
+  </div>
+</article>
+<article class="sample-card sample-card--motion">
+  <div class="preview motion--float">
+    <img src="assets/architecture.jpg" alt="CSS motion sample: Float">
+  </div>
+  <div class="card-copy">
+    <span class="index">26</span><span class="chip">LOOP</span>
+    <h3>Float</h3>
+    <p>上下に浮遊</p>
+  </div>
+</article>
+<article class="sample-card sample-card--motion">
+  <div class="preview motion--sway">
+    <img src="assets/sky.jpg" alt="CSS motion sample: Sway">
+  </div>
+  <div class="card-copy">
+    <span class="index">27</span><span class="chip">LOOP</span>
+    <h3>Sway</h3>
+    <p>ゆるく左右に揺れる</p>
+  </div>
+</article>
+<article class="sample-card sample-card--motion">
+  <div class="preview motion--pulse">
+    <img src="assets/floral.jpg" alt="CSS motion sample: Pulse">
+  </div>
+  <div class="card-copy">
+    <span class="index">28</span><span class="chip">LOOP</span>
+    <h3>Pulse</h3>
+    <p>呼吸するように拡縮</p>
+  </div>
+</article>
+<article class="sample-card sample-card--motion">
+  <div class="preview motion--spin">
+    <img src="assets/paint.jpg" alt="CSS motion sample: Spin">
+  </div>
+  <div class="card-copy">
+    <span class="index">29</span><span class="chip">LOOP</span>
+    <h3>Spin</h3>
+    <p>ゆっくり一周回転</p>
+  </div>
+</article>
+<article class="sample-card sample-card--motion">
+  <div class="preview motion--shake">
+    <img src="assets/curves.jpg" alt="CSS motion sample: Shake">
+  </div>
+  <div class="card-copy">
+    <span class="index">30</span><span class="chip">HOVER</span>
+    <h3>Shake</h3>
+    <p>短い横揺れ</p>
+  </div>
+</article>
+<article class="sample-card sample-card--motion">
+  <div class="preview motion--wiggle">
+    <img src="assets/botanical.jpg" alt="CSS motion sample: Wiggle">
+  </div>
+  <div class="card-copy">
+    <span class="index">31</span><span class="chip">LOOP</span>
+    <h3>Wiggle</h3>
+    <p>横移動＋小さな回転</p>
+  </div>
+</article>
+<article class="sample-card sample-card--motion">
+  <div class="preview motion--flip-loop">
+    <img src="assets/violet.jpg" alt="CSS motion sample: Flip Loop">
+  </div>
+  <div class="card-copy">
+    <span class="index">32</span><span class="chip">LOOP</span>
+    <h3>Flip Loop</h3>
+    <p>Y軸で一周回転</p>
+  </div>
+</article>
+<article class="sample-card sample-card--motion">
+  <div class="preview motion--bob">
+    <img src="assets/portrait.jpg" alt="CSS motion sample: Bob">
+  </div>
+  <div class="card-copy">
+    <span class="index">33</span><span class="chip">LOOP</span>
+    <h3>Bob</h3>
+    <p>上下＋回転の揺れ</p>
+  </div>
+</article>
+<article class="sample-card sample-card--motion">
+  <div class="preview motion--fade-in">
+    <img src="assets/architecture.jpg" alt="CSS motion sample: Fade In">
+  </div>
+  <div class="card-copy">
+    <span class="index">34</span><span class="chip">ENTRY</span>
+    <h3>Fade In</h3>
+    <p>透明から表示</p>
+  </div>
+</article>
+<article class="sample-card sample-card--motion">
+  <div class="preview motion--fade-up">
+    <img src="assets/sky.jpg" alt="CSS motion sample: Fade Up">
+  </div>
+  <div class="card-copy">
+    <span class="index">35</span><span class="chip">ENTRY</span>
+    <h3>Fade Up</h3>
+    <p>下から浮き上がる</p>
+  </div>
+</article>
+<article class="sample-card sample-card--motion">
+  <div class="preview motion--fade-down">
+    <img src="assets/floral.jpg" alt="CSS motion sample: Fade Down">
+  </div>
+  <div class="card-copy">
+    <span class="index">36</span><span class="chip">ENTRY</span>
+    <h3>Fade Down</h3>
+    <p>上から下りる</p>
+  </div>
+</article>
+<article class="sample-card sample-card--motion">
+  <div class="preview motion--fade-left">
+    <img src="assets/paint.jpg" alt="CSS motion sample: Fade Left">
+  </div>
+  <div class="card-copy">
+    <span class="index">37</span><span class="chip">ENTRY</span>
+    <h3>Fade Left</h3>
+    <p>左から表示</p>
+  </div>
+</article>
+<article class="sample-card sample-card--motion">
+  <div class="preview motion--fade-right">
+    <img src="assets/curves.jpg" alt="CSS motion sample: Fade Right">
+  </div>
+  <div class="card-copy">
+    <span class="index">38</span><span class="chip">ENTRY</span>
+    <h3>Fade Right</h3>
+    <p>右から表示</p>
+  </div>
+</article>
+<article class="sample-card sample-card--motion">
+  <div class="preview motion--scale-reveal">
+    <img src="assets/botanical.jpg" alt="CSS motion sample: Scale Reveal">
+  </div>
+  <div class="card-copy">
+    <span class="index">39</span><span class="chip">ENTRY</span>
+    <h3>Scale Reveal</h3>
+    <p>小から等倍へ表示</p>
+  </div>
+</article>
+<article class="sample-card sample-card--motion">
+  <div class="preview motion--circle-reveal">
+    <img src="assets/violet.jpg" alt="CSS motion sample: Circle Reveal">
+  </div>
+  <div class="card-copy">
+    <span class="index">40</span><span class="chip">ENTRY</span>
+    <h3>Circle Reveal</h3>
+    <p>円形で開く</p>
+  </div>
+</article>
+<article class="sample-card sample-card--motion">
+  <div class="preview motion--wipe-left">
+    <img src="assets/portrait.jpg" alt="CSS motion sample: Wipe Left">
+  </div>
+  <div class="card-copy">
+    <span class="index">41</span><span class="chip">ENTRY</span>
+    <h3>Wipe Left</h3>
+    <p>左端から開く</p>
+  </div>
+</article>
+<article class="sample-card sample-card--motion">
+  <div class="preview motion--wipe-right">
+    <img src="assets/architecture.jpg" alt="CSS motion sample: Wipe Right">
+  </div>
+  <div class="card-copy">
+    <span class="index">42</span><span class="chip">ENTRY</span>
+    <h3>Wipe Right</h3>
+    <p>右端から開く</p>
+  </div>
+</article>
+<article class="sample-card sample-card--motion">
+  <div class="preview motion--wipe-top">
+    <img src="assets/sky.jpg" alt="CSS motion sample: Wipe Top">
+  </div>
+  <div class="card-copy">
+    <span class="index">43</span><span class="chip">ENTRY</span>
+    <h3>Wipe Top</h3>
+    <p>上端から開く</p>
+  </div>
+</article>
+<article class="sample-card sample-card--motion">
+  <div class="preview motion--wipe-bottom">
+    <img src="assets/floral.jpg" alt="CSS motion sample: Wipe Bottom">
+  </div>
+  <div class="card-copy">
+    <span class="index">44</span><span class="chip">ENTRY</span>
+    <h3>Wipe Bottom</h3>
+    <p>下端から開く</p>
+  </div>
+</article>
+<article class="sample-card sample-card--motion">
+  <div class="preview motion--scroll-up">
+    <img src="assets/paint.jpg" alt="CSS motion sample: Scroll Up">
+  </div>
+  <div class="card-copy">
+    <span class="index">45</span><span class="chip">ENTRY</span>
+    <h3>Scroll Up</h3>
+    <p>スクロール連動で浮上</p>
+  </div>
+</article>
+<article class="sample-card sample-card--motion">
+  <div class="preview motion--scroll-zoom">
+    <img src="assets/curves.jpg" alt="CSS motion sample: Scroll Zoom">
+  </div>
+  <div class="card-copy">
+    <span class="index">46</span><span class="chip">ENTRY</span>
+    <h3>Scroll Zoom</h3>
+    <p>スクロール連動で引く</p>
+  </div>
+</article></div>
+  </section>
+  <section id="effects" class="collection" aria-labelledby="effects-title">
+    <div class="section-head"><div><div class="section-id">COLLECTION 02</div><h2 id="effects-title">EFFECTS</h2></div><p>色調・合成・光・質感・マスク／切り抜きだけを使った50種の静的エフェクトです。アニメーションは使用していません。</p></div>
+    <div class="sample-grid"><article class="sample-card sample-card--effect">
+  <div class="preview effect--grayscale">
+    <img src="assets/portrait.jpg" alt="CSS effect sample: Grayscale">
+  </div>
+  <div class="card-copy">
+    <span class="index">01</span><span class="chip">STATIC</span>
+    <h3>Grayscale</h3>
+    <p>モノクロ</p>
+  </div>
+</article>
+<article class="sample-card sample-card--effect">
+  <div class="preview effect--sepia">
+    <img src="assets/architecture.jpg" alt="CSS effect sample: Sepia">
+  </div>
+  <div class="card-copy">
+    <span class="index">02</span><span class="chip">STATIC</span>
+    <h3>Sepia</h3>
+    <p>セピア調</p>
+  </div>
+</article>
+<article class="sample-card sample-card--effect">
+  <div class="preview effect--desaturate">
+    <img src="assets/sky.jpg" alt="CSS effect sample: Desaturate">
+  </div>
+  <div class="card-copy">
+    <span class="index">03</span><span class="chip">STATIC</span>
+    <h3>Desaturate</h3>
+    <p>低彩度</p>
+  </div>
+</article>
+<article class="sample-card sample-card--effect">
+  <div class="preview effect--saturate">
+    <img src="assets/floral.jpg" alt="CSS effect sample: Saturate">
+  </div>
+  <div class="card-copy">
+    <span class="index">04</span><span class="chip">STATIC</span>
+    <h3>Saturate</h3>
+    <p>高彩度</p>
+  </div>
+</article>
+<article class="sample-card sample-card--effect">
+  <div class="preview effect--contrast">
+    <img src="assets/paint.jpg" alt="CSS effect sample: Contrast">
+  </div>
+  <div class="card-copy">
+    <span class="index">05</span><span class="chip">STATIC</span>
+    <h3>Contrast</h3>
+    <p>高コントラスト</p>
+  </div>
+</article>
+<article class="sample-card sample-card--effect">
+  <div class="preview effect--low-contrast">
+    <img src="assets/curves.jpg" alt="CSS effect sample: Low Contrast">
+  </div>
+  <div class="card-copy">
+    <span class="index">06</span><span class="chip">STATIC</span>
+    <h3>Low Contrast</h3>
+    <p>低コントラスト</p>
+  </div>
+</article>
+<article class="sample-card sample-card--effect">
+  <div class="preview effect--brighten">
+    <img src="assets/botanical.jpg" alt="CSS effect sample: Brighten">
+  </div>
+  <div class="card-copy">
+    <span class="index">07</span><span class="chip">STATIC</span>
+    <h3>Brighten</h3>
+    <p>明るくする</p>
+  </div>
+</article>
+<article class="sample-card sample-card--effect">
+  <div class="preview effect--darken">
+    <img src="assets/violet.jpg" alt="CSS effect sample: Darken">
+  </div>
+  <div class="card-copy">
+    <span class="index">08</span><span class="chip">STATIC</span>
+    <h3>Darken</h3>
+    <p>暗くする</p>
+  </div>
+</article>
+<article class="sample-card sample-card--effect">
+  <div class="preview effect--blur">
+    <img src="assets/portrait.jpg" alt="CSS effect sample: Blur">
+  </div>
+  <div class="card-copy">
+    <span class="index">09</span><span class="chip">STATIC</span>
+    <h3>Blur</h3>
+    <p>ぼかし</p>
+  </div>
+</article>
+<article class="sample-card sample-card--effect">
+  <div class="preview effect--invert">
+    <img src="assets/architecture.jpg" alt="CSS effect sample: Invert">
+  </div>
+  <div class="card-copy">
+    <span class="index">10</span><span class="chip">STATIC</span>
+    <h3>Invert</h3>
+    <p>色反転</p>
+  </div>
+</article>
+<article class="sample-card sample-card--effect">
+  <div class="preview effect--hue-rotate">
+    <img src="assets/sky.jpg" alt="CSS effect sample: Hue Rotate">
+  </div>
+  <div class="card-copy">
+    <span class="index">11</span><span class="chip">STATIC</span>
+    <h3>Hue Rotate</h3>
+    <p>色相回転</p>
+  </div>
+</article>
+<article class="sample-card sample-card--effect">
+  <div class="preview effect--cool">
+    <img src="assets/floral.jpg" alt="CSS effect sample: Cool">
+  </div>
+  <div class="card-copy">
+    <span class="index">12</span><span class="chip">STATIC</span>
+    <h3>Cool</h3>
+    <p>クールトーン</p>
+  </div>
+</article>
+<article class="sample-card sample-card--effect">
+  <div class="preview effect--warm">
+    <img src="assets/paint.jpg" alt="CSS effect sample: Warm">
+  </div>
+  <div class="card-copy">
+    <span class="index">13</span><span class="chip">STATIC</span>
+    <h3>Warm</h3>
+    <p>ウォームトーン</p>
+  </div>
+</article>
+<article class="sample-card sample-card--effect">
+  <div class="preview effect--vintage">
+    <img src="assets/curves.jpg" alt="CSS effect sample: Vintage">
+  </div>
+  <div class="card-copy">
+    <span class="index">14</span><span class="chip">STATIC</span>
+    <h3>Vintage</h3>
+    <p>ヴィンテージ</p>
+  </div>
+</article>
+<article class="sample-card sample-card--effect">
+  <div class="preview effect--lomo">
+    <img src="assets/botanical.jpg" alt="CSS effect sample: Lomo">
+  </div>
+  <div class="card-copy">
+    <span class="index">15</span><span class="chip">STATIC</span>
+    <h3>Lomo</h3>
+    <p>ロモ風</p>
+  </div>
+</article>
+<article class="sample-card sample-card--effect">
+  <div class="preview effect--washed">
+    <img src="assets/violet.jpg" alt="CSS effect sample: Washed">
+  </div>
+  <div class="card-copy">
+    <span class="index">16</span><span class="chip">STATIC</span>
+    <h3>Washed</h3>
+    <p>白飛び風</p>
+  </div>
+</article>
+<article class="sample-card sample-card--effect">
+  <div class="preview effect--black-overlay">
+    <img src="assets/portrait.jpg" alt="CSS effect sample: Black Overlay">
+  </div>
+  <div class="card-copy">
+    <span class="index">17</span><span class="chip">STATIC</span>
+    <h3>Black Overlay</h3>
+    <p>黒オーバーレイ</p>
+  </div>
+</article>
+<article class="sample-card sample-card--effect">
+  <div class="preview effect--white-overlay">
+    <img src="assets/architecture.jpg" alt="CSS effect sample: White Overlay">
+  </div>
+  <div class="card-copy">
+    <span class="index">18</span><span class="chip">STATIC</span>
+    <h3>White Overlay</h3>
+    <p>白オーバーレイ</p>
+  </div>
+</article>
+<article class="sample-card sample-card--effect">
+  <div class="preview effect--brand-overlay">
+    <img src="assets/sky.jpg" alt="CSS effect sample: Brand Overlay">
+  </div>
+  <div class="card-copy">
+    <span class="index">19</span><span class="chip">STATIC</span>
+    <h3>Brand Overlay</h3>
+    <p>ブランドカラー</p>
+  </div>
+</article>
+<article class="sample-card sample-card--effect">
+  <div class="preview effect--gradient-overlay">
+    <img src="assets/floral.jpg" alt="CSS effect sample: Gradient Overlay">
+  </div>
+  <div class="card-copy">
+    <span class="index">20</span><span class="chip">STATIC</span>
+    <h3>Gradient Overlay</h3>
+    <p>下方向グラデーション</p>
+  </div>
+</article>
+<article class="sample-card sample-card--effect">
+  <div class="preview effect--side-gradient">
+    <img src="assets/paint.jpg" alt="CSS effect sample: Side Gradient">
+  </div>
+  <div class="card-copy">
+    <span class="index">21</span><span class="chip">STATIC</span>
+    <h3>Side Gradient</h3>
+    <p>左方向グラデーション</p>
+  </div>
+</article>
+<article class="sample-card sample-card--effect">
+  <div class="preview effect--duotone">
+    <img src="assets/curves.jpg" alt="CSS effect sample: Duotone">
+  </div>
+  <div class="card-copy">
+    <span class="index">22</span><span class="chip">STATIC</span>
+    <h3>Duotone</h3>
+    <p>二色調</p>
+  </div>
+</article>
+<article class="sample-card sample-card--effect">
+  <div class="preview effect--screen">
+    <img src="assets/botanical.jpg" alt="CSS effect sample: Screen">
+  </div>
+  <div class="card-copy">
+    <span class="index">23</span><span class="chip">STATIC</span>
+    <h3>Screen</h3>
+    <p>スクリーン発光</p>
+  </div>
+</article>
+<article class="sample-card sample-card--effect">
+  <div class="preview effect--overlay">
+    <img src="assets/violet.jpg" alt="CSS effect sample: Overlay">
+  </div>
+  <div class="card-copy">
+    <span class="index">24</span><span class="chip">STATIC</span>
+    <h3>Overlay</h3>
+    <p>オーバーレイ合成</p>
+  </div>
+</article>
+<article class="sample-card sample-card--effect">
+  <div class="preview effect--soft-light">
+    <img src="assets/portrait.jpg" alt="CSS effect sample: Soft Light">
+  </div>
+  <div class="card-copy">
+    <span class="index">25</span><span class="chip">STATIC</span>
+    <h3>Soft Light</h3>
+    <p>ソフトライト</p>
+  </div>
+</article>
+<article class="sample-card sample-card--effect">
+  <div class="preview effect--color-burn">
+    <img src="assets/architecture.jpg" alt="CSS effect sample: Color Burn">
+  </div>
+  <div class="card-copy">
+    <span class="index">26</span><span class="chip">STATIC</span>
+    <h3>Color Burn</h3>
+    <p>カラーバーン</p>
+  </div>
+</article>
+<article class="sample-card sample-card--effect">
+  <div class="preview effect--color-dodge">
+    <img src="assets/sky.jpg" alt="CSS effect sample: Color Dodge">
+  </div>
+  <div class="card-copy">
+    <span class="index">27</span><span class="chip">STATIC</span>
+    <h3>Color Dodge</h3>
+    <p>カラードッジ</p>
+  </div>
+</article>
+<article class="sample-card sample-card--effect">
+  <div class="preview effect--multiply">
+    <img src="assets/floral.jpg" alt="CSS effect sample: Multiply">
+  </div>
+  <div class="card-copy">
+    <span class="index">28</span><span class="chip">STATIC</span>
+    <h3>Multiply</h3>
+    <p>乗算</p>
+  </div>
+</article>
+<article class="sample-card sample-card--effect">
+  <div class="preview effect--vignette">
+    <img src="assets/paint.jpg" alt="CSS effect sample: Vignette">
+  </div>
+  <div class="card-copy">
+    <span class="index">29</span><span class="chip">STATIC</span>
+    <h3>Vignette</h3>
+    <p>ビネット</p>
+  </div>
+</article>
+<article class="sample-card sample-card--effect">
+  <div class="preview effect--spotlight">
+    <img src="assets/curves.jpg" alt="CSS effect sample: Spotlight">
+  </div>
+  <div class="card-copy">
+    <span class="index">30</span><span class="chip">STATIC</span>
+    <h3>Spotlight</h3>
+    <p>スポットライト</p>
+  </div>
+</article>
+<article class="sample-card sample-card--effect">
+  <div class="preview effect--inner-frame">
+    <img src="assets/botanical.jpg" alt="CSS effect sample: Inner Frame">
+  </div>
+  <div class="card-copy">
+    <span class="index">31</span><span class="chip">STATIC</span>
+    <h3>Inner Frame</h3>
+    <p>内側フレーム</p>
+  </div>
+</article>
+<article class="sample-card sample-card--effect">
+  <div class="preview effect--double-frame">
+    <img src="assets/violet.jpg" alt="CSS effect sample: Double Frame">
+  </div>
+  <div class="card-copy">
+    <span class="index">32</span><span class="chip">STATIC</span>
+    <h3>Double Frame</h3>
+    <p>二重フレーム</p>
+  </div>
+</article>
+<article class="sample-card sample-card--effect">
+  <div class="preview effect--shadow">
+    <img src="assets/portrait.jpg" alt="CSS effect sample: Shadow">
+  </div>
+  <div class="card-copy">
+    <span class="index">33</span><span class="chip">STATIC</span>
+    <h3>Shadow</h3>
+    <p>フローティングシャドウ</p>
+  </div>
+</article>
+<article class="sample-card sample-card--effect">
+  <div class="preview effect--inner-shadow">
+    <img src="assets/architecture.jpg" alt="CSS effect sample: Inner Shadow">
+  </div>
+  <div class="card-copy">
+    <span class="index">34</span><span class="chip">STATIC</span>
+    <h3>Inner Shadow</h3>
+    <p>インナーシャドウ</p>
+  </div>
+</article>
+<article class="sample-card sample-card--effect">
+  <div class="preview effect--glass">
+    <img src="assets/sky.jpg" alt="CSS effect sample: Glass">
+  </div>
+  <div class="card-copy">
+    <span class="index">35</span><span class="chip">STATIC</span>
+    <h3>Glass</h3>
+    <p>ガラス面</p>
+  </div>
+</article>
+<article class="sample-card sample-card--effect">
+  <div class="preview effect--matte">
+    <img src="assets/floral.jpg" alt="CSS effect sample: Matte">
+  </div>
+  <div class="card-copy">
+    <span class="index">36</span><span class="chip">STATIC</span>
+    <h3>Matte</h3>
+    <p>マット枠</p>
+  </div>
+</article>
+<article class="sample-card sample-card--effect">
+  <div class="preview effect--grain">
+    <img src="assets/paint.jpg" alt="CSS effect sample: Grain">
+  </div>
+  <div class="card-copy">
+    <span class="index">37</span><span class="chip">STATIC</span>
+    <h3>Grain</h3>
+    <p>粒子</p>
+  </div>
+</article>
+<article class="sample-card sample-card--effect">
+  <div class="preview effect--scanlines">
+    <img src="assets/curves.jpg" alt="CSS effect sample: Scanlines">
+  </div>
+  <div class="card-copy">
+    <span class="index">38</span><span class="chip">STATIC</span>
+    <h3>Scanlines</h3>
+    <p>スキャンライン</p>
+  </div>
+</article>
+<article class="sample-card sample-card--effect">
+  <div class="preview effect--halftone">
+    <img src="assets/botanical.jpg" alt="CSS effect sample: Halftone">
+  </div>
+  <div class="card-copy">
+    <span class="index">39</span><span class="chip">STATIC</span>
+    <h3>Halftone</h3>
+    <p>網点</p>
+  </div>
+</article>
+<article class="sample-card sample-card--effect">
+  <div class="preview effect--grid">
+    <img src="assets/violet.jpg" alt="CSS effect sample: Grid">
+  </div>
+  <div class="card-copy">
+    <span class="index">40</span><span class="chip">STATIC</span>
+    <h3>Grid</h3>
+    <p>グリッド</p>
+  </div>
+</article>
+<article class="sample-card sample-card--effect">
+  <div class="preview effect--paper">
+    <img src="assets/portrait.jpg" alt="CSS effect sample: Paper">
+  </div>
+  <div class="card-copy">
+    <span class="index">41</span><span class="chip">STATIC</span>
+    <h3>Paper</h3>
+    <p>紙テクスチャ</p>
+  </div>
+</article>
+<article class="sample-card sample-card--effect">
+  <div class="preview effect--circle">
+    <img src="assets/architecture.jpg" alt="CSS effect sample: Circle Crop">
+  </div>
+  <div class="card-copy">
+    <span class="index">42</span><span class="chip">STATIC</span>
+    <h3>Circle Crop</h3>
+    <p>円形トリミング</p>
+  </div>
+</article>
+<article class="sample-card sample-card--effect">
+  <div class="preview effect--round">
+    <img src="assets/sky.jpg" alt="CSS effect sample: Round Corners">
+  </div>
+  <div class="card-copy">
+    <span class="index">43</span><span class="chip">STATIC</span>
+    <h3>Round Corners</h3>
+    <p>角丸強調</p>
+  </div>
+</article>
+<article class="sample-card sample-card--effect">
+  <div class="preview effect--diagonal">
+    <img src="assets/floral.jpg" alt="CSS effect sample: Diagonal Crop">
+  </div>
+  <div class="card-copy">
+    <span class="index">44</span><span class="chip">STATIC</span>
+    <h3>Diagonal Crop</h3>
+    <p>斜めカット</p>
+  </div>
+</article>
+<article class="sample-card sample-card--effect">
+  <div class="preview effect--hexagon">
+    <img src="assets/paint.jpg" alt="CSS effect sample: Hexagon">
+  </div>
+  <div class="card-copy">
+    <span class="index">45</span><span class="chip">STATIC</span>
+    <h3>Hexagon</h3>
+    <p>六角形トリミング</p>
+  </div>
+</article>
+<article class="sample-card sample-card--effect">
+  <div class="preview effect--diamond">
+    <img src="assets/curves.jpg" alt="CSS effect sample: Diamond">
+  </div>
+  <div class="card-copy">
+    <span class="index">46</span><span class="chip">STATIC</span>
+    <h3>Diamond</h3>
+    <p>ダイヤモンドトリミング</p>
+  </div>
+</article>
+<article class="sample-card sample-card--effect">
+  <div class="preview effect--fade-bottom">
+    <img src="assets/botanical.jpg" alt="CSS effect sample: Fade Bottom">
+  </div>
+  <div class="card-copy">
+    <span class="index">47</span><span class="chip">STATIC</span>
+    <h3>Fade Bottom</h3>
+    <p>下端フェードマスク</p>
+  </div>
+</article>
+<article class="sample-card sample-card--effect">
+  <div class="preview effect--fade-sides">
+    <img src="assets/violet.jpg" alt="CSS effect sample: Fade Sides">
+  </div>
+  <div class="card-copy">
+    <span class="index">48</span><span class="chip">STATIC</span>
+    <h3>Fade Sides</h3>
+    <p>左右フェードマスク</p>
+  </div>
+</article>
+<article class="sample-card sample-card--effect">
+  <div class="preview effect--circle-mask">
+    <img src="assets/portrait.jpg" alt="CSS effect sample: Circle Mask">
+  </div>
+  <div class="card-copy">
+    <span class="index">49</span><span class="chip">STATIC</span>
+    <h3>Circle Mask</h3>
+    <p>円形スポットマスク</p>
+  </div>
+</article>
+<article class="sample-card sample-card--effect">
+  <div class="preview effect--stripe-mask">
+    <img src="assets/architecture.jpg" alt="CSS effect sample: Stripe Mask">
+  </div>
+  <div class="card-copy">
+    <span class="index">50</span><span class="chip">STATIC</span>
+    <h3>Stripe Mask</h3>
+    <p>斜めストライプマスク</p>
+  </div>
+</article></div>
+  </section>
+
+
+  <section id="transitions" class="collection" aria-labelledby="transition-title">
+    <div class="section-head"><div><div class="section-id">COLLECTION 03</div><h2 id="transition-title">TRANSITIONS</h2></div><p>すべて画像Aと画像Bを重ね、CSSの<code>transform</code>、<code>opacity</code>、<code>clip-path</code>、<code>mask</code>だけで切り替えています。</p></div>
+    <div class="transition-grid">
+      <article class="sample-card"><div class="transition-stage transition--crossfade"><img class="image-a" src="assets/portrait.jpg" alt="画像A"><img class="image-b" src="assets/architecture.jpg" alt="画像B"></div><div class="card-copy"><span class="index">01</span><span class="chip">AUTO</span><h3>Crossfade</h3><p>最も軽い不透明度だけのクロスフェード。</p></div></article>
+      <article class="sample-card"><div class="transition-stage transition--slide-left"><img class="image-a" src="assets/architecture.jpg" alt="画像A"><img class="image-b" src="assets/sky.jpg" alt="画像B"></div><div class="card-copy"><span class="index">02</span><span class="chip">AUTO</span><h3>Push Left</h3><p>Aを左へ押し出し、Bを右から入れる。</p></div></article>
+      <article class="sample-card"><div class="transition-stage transition--slide-right"><img class="image-a" src="assets/sky.jpg" alt="画像A"><img class="image-b" src="assets/floral.jpg" alt="画像B"></div><div class="card-copy"><span class="index">03</span><span class="chip">AUTO</span><h3>Push Right</h3><p>Aを右へ押し出し、Bを左から入れる。</p></div></article>
+      <article class="sample-card"><div class="transition-stage transition--zoom"><img class="image-a" src="assets/floral.jpg" alt="画像A"><img class="image-b" src="assets/paint.jpg" alt="画像B"></div><div class="card-copy"><span class="index">04</span><span class="chip">AUTO</span><h3>Zoom Cross</h3><p>Bを寄った状態から等倍へ戻して切り替える。</p></div></article>
+      <article class="sample-card"><div class="transition-stage transition--iris"><img class="image-a" src="assets/paint.jpg" alt="画像A"><img class="image-b" src="assets/curves.jpg" alt="画像B"></div><div class="card-copy"><span class="index">05</span><span class="chip">AUTO</span><h3>Circle Iris</h3><p>中央の円からBを開くリビール。</p></div></article>
+      <article class="sample-card"><div class="transition-stage transition--diagonal"><img class="image-a" src="assets/curves.jpg" alt="画像A"><img class="image-b" src="assets/botanical.jpg" alt="画像B"></div><div class="card-copy"><span class="index">06</span><span class="chip">AUTO</span><h3>Diagonal Wipe</h3><p>斜めの境界線でBを出すワイプ。</p></div></article>
+      <article class="sample-card"><div class="transition-stage transition--vertical"><img class="image-a" src="assets/botanical.jpg" alt="画像A"><img class="image-b" src="assets/violet.jpg" alt="画像B"></div><div class="card-copy"><span class="index">07</span><span class="chip">AUTO</span><h3>Vertical Split</h3><p>中央から左右へ開く縦分割のリビール。</p></div></article>
+      <article class="sample-card"><div class="transition-stage transition--horizontal"><img class="image-a" src="assets/violet.jpg" alt="画像A"><img class="image-b" src="assets/portrait.jpg" alt="画像B"></div><div class="card-copy"><span class="index">08</span><span class="chip">AUTO</span><h3>Horizontal Split</h3><p>中央から上下へ開く横分割のリビール。</p></div></article>
+      <article class="sample-card"><div class="transition-stage transition--cube"><img class="image-a" src="assets/portrait.jpg" alt="画像A"><img class="image-b" src="assets/sky.jpg" alt="画像B"></div><div class="card-copy"><span class="index">09</span><span class="chip">AUTO</span><h3>3D Cube</h3><p>Y軸の90度回転で立体的に切り替える。</p></div></article>
+      <article class="sample-card"><div class="transition-stage transition--flip"><img class="image-a" src="assets/architecture.jpg" alt="画像A"><img class="image-b" src="assets/floral.jpg" alt="画像B"></div><div class="card-copy"><span class="index">10</span><span class="chip">AUTO</span><h3>3D Flip</h3><p>X軸でフリップするカード風の切り替え。</p></div></article>
+      <article class="sample-card"><div class="transition-stage transition--blur"><img class="image-a" src="assets/sky.jpg" alt="画像A"><img class="image-b" src="assets/curves.jpg" alt="画像B"></div><div class="card-copy"><span class="index">11</span><span class="chip">AUTO</span><h3>Blur Dissolve</h3><p>ぼかしを伴う溶解風の切り替え。</p></div></article>
+      <article class="sample-card"><div class="transition-stage transition--mask"><img class="image-a" src="assets/floral.jpg" alt="画像A"><img class="image-b" src="assets/paint.jpg" alt="画像B"></div><div class="card-copy"><span class="index">12</span><span class="chip">AUTO</span><h3>Soft Mask Sweep</h3><p>グラデーションマスクで境界を柔らかくする。</p></div></article>
+      <article class="sample-card"><div class="transition-stage transition--crossfade"><img class="image-a" src="assets/paint.jpg" alt="画像A"><img class="image-b" src="assets/botanical.jpg" alt="画像B"></div><div class="card-copy"><span class="index">13</span><span class="chip">AUTO</span><h3>Editorial Fade</h3><p>余韻を残す長めのクロスフェードとして使う。</p></div></article>
+      <article class="sample-card"><div class="transition-stage transition--zoom"><img class="image-a" src="assets/botanical.jpg" alt="画像A"><img class="image-b" src="assets/violet.jpg" alt="画像B"></div><div class="card-copy"><span class="index">14</span><span class="chip">AUTO</span><h3>Zoom Reveal</h3><p>広告・ポートフォリオ向けの強い視線移動。</p></div></article>
+    </div>
+  </section>
+
+
+  <section id="seams" class="collection" aria-labelledby="seam-title">
+    <div class="section-head"><div><div class="section-id">COLLECTION 04</div><h2 id="seam-title">IMAGE SEAM</h2></div><p>こちらは画面全体を切り替えるのではなく、画像Aと画像Bが<strong>同じ画面で接するときの境界デザイン</strong>です。コラージュ、セクション区切り、分割ヒーロー、編集ページの見開きに使えます。</p></div>
+    <div class="seam-grid">
+      <article class="sample-card seam-card"><div class="seam-stage seam--straight"><img class="image-b" src="assets/architecture.jpg" alt="画像B"><img class="image-a" src="assets/portrait.jpg" alt="画像A"><span class="tag tag--a">IMAGE A</span><span class="tag tag--b">IMAGE B</span></div><div class="card-copy"><span class="index">S01</span><span class="chip">SEAM</span><h3>Straight Split</h3><p>もっとも安定する直線の境界。分割ヒーローの基準。</p></div></article>
+      <article class="sample-card seam-card"><div class="seam-stage seam--diagonal"><img class="image-b" src="assets/sky.jpg" alt="画像B"><img class="image-a" src="assets/architecture.jpg" alt="画像A"><span class="tag tag--a">IMAGE A</span><span class="tag tag--b">IMAGE B</span></div><div class="card-copy"><span class="index">S02</span><span class="chip">SEAM</span><h3>Diagonal Cut</h3><p>視線を左上から右下へ流す、シャープな斜め境界。</p></div></article>
+      <article class="sample-card seam-card"><div class="seam-stage seam--curve"><img class="image-b" src="assets/floral.jpg" alt="画像B"><img class="image-a" src="assets/sky.jpg" alt="画像A"><span class="tag tag--a">IMAGE A</span><span class="tag tag--b">IMAGE B</span></div><div class="card-copy"><span class="index">S03</span><span class="chip">SEAM</span><h3>Curved Gate</h3><p>片側を大きな曲線で切り、柔らかい境界にする。</p></div></article>
+      <article class="sample-card seam-card"><div class="seam-stage seam--wave"><img class="image-b" src="assets/paint.jpg" alt="画像B"><img class="image-a" src="assets/floral.jpg" alt="画像A"><span class="tag tag--a">IMAGE A</span><span class="tag tag--b">IMAGE B</span></div><div class="card-copy"><span class="index">S04</span><span class="chip">SEAM</span><h3>Gentle Wave</h3><p>連続する波型。自然物・旅行・子ども向けに合う。</p></div></article>
+      <article class="sample-card seam-card"><div class="seam-stage seam--zigzag"><img class="image-b" src="assets/curves.jpg" alt="画像B"><img class="image-a" src="assets/paint.jpg" alt="画像A"><span class="tag tag--a">IMAGE A</span><span class="tag tag--b">IMAGE B</span></div><div class="card-copy"><span class="index">S05</span><span class="chip">SEAM</span><h3>Zig Zag</h3><p>強いジグザグ境界。スポーツやストリート系に使いやすい。</p></div></article>
+      <article class="sample-card seam-card"><div class="seam-stage seam--torn"><img class="image-b" src="assets/botanical.jpg" alt="画像B"><img class="image-a" src="assets/curves.jpg" alt="画像A"><span class="tag tag--a">IMAGE A</span><span class="tag tag--b">IMAGE B</span></div><div class="card-copy"><span class="index">S06</span><span class="chip">SEAM</span><h3>Torn Paper</h3><p>不規則な裂け目をCSSの多点ポリゴンで作る。</p></div></article>
+      <article class="sample-card seam-card"><div class="seam-stage seam--soft"><img class="image-b" src="assets/violet.jpg" alt="画像B"><img class="image-a" src="assets/botanical.jpg" alt="画像A"><span class="tag tag--a">IMAGE A</span><span class="tag tag--b">IMAGE B</span></div><div class="card-copy"><span class="index">S07</span><span class="chip">SEAM</span><h3>Soft Blend</h3><p>マスクで二枚を重ね、境界をぼかして溶かす。</p></div></article>
+      <article class="sample-card seam-card"><div class="seam-stage seam--slats"><img class="image-b" src="assets/portrait.jpg" alt="画像B"><img class="image-a" src="assets/violet.jpg" alt="画像A"><span class="tag tag--a">IMAGE A</span><span class="tag tag--b">IMAGE B</span></div><div class="card-copy"><span class="index">S08</span><span class="chip">SEAM</span><h3>Vertical Slats</h3><p>短いスリットを重ねて、デジタルな継ぎ目にする。</p></div></article>
+      <article class="sample-card seam-card"><div class="seam-stage seam--center"><img class="image-b" src="assets/architecture.jpg" alt="画像B"><img class="image-a" src="assets/portrait.jpg" alt="画像A"><span class="tag tag--a">IMAGE A</span><span class="tag tag--b">IMAGE B</span></div><div class="card-copy"><span class="index">S09</span><span class="chip">SEAM</span><h3>Center Apex</h3><p>中央で張り出す切り込み。片側の主役を強調できる。</p></div></article>
+      <article class="sample-card seam-card"><div class="seam-stage seam--ribbon"><img class="image-b" src="assets/sky.jpg" alt="画像B"><img class="image-a" src="assets/floral.jpg" alt="画像A"><span class="tag tag--a">IMAGE A</span><span class="tag tag--b">IMAGE B</span></div><div class="card-copy"><span class="index">S10</span><span class="chip">SEAM</span><h3>Ribbon Light</h3><p>リボン状の境界に明るい帯を重ね、接続を目立たせる。</p></div></article>
+      <article class="sample-card seam-card seam-card--image-only"><div class="seam-stage seam--whiteout" aria-label="画像Aが白へフェードし、画像Bが現れるホワイトアウトトランジション"><img class="image-b" src="assets/curves.jpg" alt="画像B"><img class="image-a" src="assets/paint.jpg" alt="画像A"></div></article>
+    </div>
+    <div class="layer-grid" style="margin-top:24px">
+      <section class="tip-card"><h3>境界トランジションのコツ</h3><p>画像A/Bの<strong>地平線・人物の目線・主要被写体の高さ</strong>を揃えると、異なる画像を接続しても不自然さが減ります。境界に複雑な形を使うほど、両側の被写体から10〜15%程度離して切るのが安全です。顔・建物の輪郭・商品ロゴを境界で切らないようにします。</p></section>
+      <section class="tip-card"><h3>実装の選び方</h3><p><strong>直線／斜め／波／裂け目</strong>は<code>clip-path: polygon()</code>、柔らかく混ぜる場合は<code>mask-image</code>、立体感を足す場合は疑似要素のグラデーションを使います。複数枚の大きい画像を重ねるため、一覧表示では画像を最適化し、境界エフェクトは必要な箇所に限定します。</p></section>
+    </div>
+  </section>
+
+  <section id="layers" class="collection" aria-labelledby="layer-title">
+    <div class="section-head"><div><div class="section-id">COLLECTION 05</div><h2 id="layer-title">LAYER MOTION</h2></div><p>背景・遠景・中景・前景を分けて動かすと、静止画の上でも奥行きが生まれます。雲は遠いほどゆっくり、手前ほど速く動かします。</p></div>
+    <div class="layer-grid">
+      <article class="scene-card">
+        <div class="layer-scene" aria-label="雲、霧、山、前景を別レイヤーで動かすデモ">
+          <div class="sun"></div><div class="cloud cloud--far"></div><div class="cloud cloud--mid"></div><div class="mountain"></div><div class="mist"></div><div class="cloud cloud--front"></div><div class="mountain mountain--near"></div><div class="ground"></div>
+        </div>
+        <div class="scene-caption"><span class="index">LAYER DEMO</span><span class="chip">AUTO</span><h3>Cloud Drift + Depth</h3><p>空・太陽・遠い雲・中景の雲・山・霧・前景を独立レイヤーにしています。遠い雲は29秒、近い雲は14秒で動かし、速度差だけでパララックスを作っています。</p></div>
+      </article>
+      <aside class="layer-stack">
+        <section class="tip-card"><h3>速度の目安</h3><table class="speed-table"><thead><tr><th>レイヤー</th><th>移動量</th><th>速度</th></tr></thead><tbody><tr><td>背景／空</td><td>0〜1%</td><td>停止〜最遅</td></tr><tr><td>遠い雲</td><td>0.25×</td><td>24〜36秒</td></tr><tr><td>中景の雲・山</td><td>0.55×</td><td>16〜24秒</td></tr><tr><td>手前の雲・木</td><td>1.0×</td><td>8〜16秒</td></tr></tbody></table></section>
+        <section class="tip-card"><h3>レイヤー分けのコツ</h3><ul><li>カメラ位置と地平線を全素材で固定する。</li><li>雲は左右に余白を残して書き出し、画面外から入れる。</li><li>前景ほど大きく、速く、コントラストを強くする。</li><li>背景ほど彩度・コントラストを落とし、動きを小さくする。</li></ul></section>
+      </aside>
+    </div>
+  </section>
+
+  <section id="tips" class="collection" aria-labelledby="tips-title">
+    <div class="section-head"><div><div class="section-id">IMPLEMENTATION NOTES</div><h2 id="tips-title">TIPS</h2></div><p>レイヤー素材を準備する際の設計と、CSS実装を軽く・破綻しにくくするための実用的なコツです。</p></div>
+    <div class="layer-grid">
+      <section class="code-panel"><h3>レイヤーの基本構造</h3><pre>&lt;div class="scene"&gt;
+  &lt;img class="layer layer--sky" src="sky.webp" alt=""&gt;
+  &lt;img class="layer layer--cloud-far" src="cloud-far.webp" alt=""&gt;
+  &lt;img class="layer layer--cloud-near" src="cloud-near.webp" alt=""&gt;
+  &lt;img class="layer layer--mountain" src="mountain.webp" alt=""&gt;
+  &lt;img class="layer layer--foreground" src="trees.webp" alt=""&gt;
+&lt;/div&gt;
+
+.scene { position: relative; overflow: hidden; }
+.layer { position: absolute; inset: 0; width: 100%; height: 100%; }
+.layer--cloud-far  { animation: drift 30s linear infinite; }
+.layer--cloud-near { animation: drift 14s linear infinite; }
+
+@keyframes drift {
+  from { transform: translate3d(-8%, 0, 0); }
+  to   { transform: translate3d( 8%, 0, 0); }
+}</pre></section>
+      <aside class="layer-stack">
+        <section class="tip-card"><h3>素材作り</h3><p><strong>背景・雲・地形・前景を別々の透過PNG/WebP</strong>にします。重なりの境界は少し重複させ、画面外に出る部分にも余白を残すと、移動時に切れ目が見えません。空の背景だけは画像全体を持たせ、雲や前景だけを透明素材にすると管理しやすくなります。</p></section>
+        <section class="tip-card"><h3>動かすプロパティ</h3><p>基本は<strong>transform と opacity</strong>を優先します。大きな <code>filter: blur()</code>、多重 <code>backdrop-filter</code>、高解像度レイヤーを大量に同時移動すると負荷が上がります。<code>will-change: transform</code> は実際に常時動かす少数レイヤーだけに絞ります。</p></section>
+        <section class="tip-card"><h3>自然に見せるコツ</h3><p>雲の速度を完全な一定値にしない、霧には小さい不透明度差を付ける、前景と背景で移動距離の比率を変える、という3点で「スライドしている素材」感を減らせます。人物や建物は大きく動かさず、0.5〜2%程度に抑えると破綻しにくくなります。</p></section>
+        <section class="tip-card"><h3>アクセシビリティ</h3><p><code>prefers-reduced-motion: reduce</code> でループを止めるか、最終状態で固定します。自動再生を切り替えるCSSチェックボックスを用意すると、JavaScriptなしでも閲覧者が動きを止められます。</p></section>
+      </aside>
+    </div>
+  </section>
+
+</main>
+<footer class="site-footer"><span>CSS IMAGE MOTION LAB / 121 SAMPLES + LAYER GUIDE</span><span>NO JAVASCRIPT · HTML + CSS ONLY</span></footer>
+</body>
+</html>
